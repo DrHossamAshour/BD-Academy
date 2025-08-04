@@ -349,18 +349,18 @@ export default function CheckoutPage() {
                   {/* Course Info */}
                   <div className="flex space-x-4">
                     <Image
-                      src={displayCourse.image}
-                      alt={displayCourse.title}
+                      src={displayCourse.image || "/placeholder-course.jpg"}
+                      alt={displayCourse.title || "Course"}
                       width={80}
                       height={60}
                       className="w-20 h-15 object-cover rounded"
                     />
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-800 line-clamp-2">
-                        {displayCourse.title}
+                        {displayCourse.title || "Course"}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        by {displayCourse.instructor}
+                        by {displayCourse.instructor || "Instructor"}
                       </p>
                     </div>
                   </div>

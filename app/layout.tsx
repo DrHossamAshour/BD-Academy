@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import ClientBody from "./ClientBody";
 import Script from "next/script";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
+import AuthProvider from "./providers/AuthProvider";
 
 export const metadata: Metadata = {
   title: "BigDentist - Dental Education Platform",
@@ -20,15 +15,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en">
       <head>
         <Script
           crossOrigin="anonymous"
           src="//unpkg.com/same-runtime/dist/index.global.js"
         />
       </head>
-      <body suppressHydrationWarning className="antialiased">
-        <ClientBody>{children}</ClientBody>
+      <body suppressHydrationWarning className="antialiased font-sans">
+        <AuthProvider>
+          <ClientBody>{children}</ClientBody>
+        </AuthProvider>
       </body>
     </html>
   );
