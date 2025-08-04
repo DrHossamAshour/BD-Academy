@@ -5,13 +5,78 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import Image from "next/image";
-import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const router = useRouter();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess("Account created successfully! Please sign in.");
+        setTimeout(() => {
+          router.push("/auth/login");
+        }, 2000);
+      } else {
+        setError(data.error || "An error occurred during registration");
+      }
+    } catch (err) {
+      setError("An error occurred during registration");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -48,19 +113,35 @@ export default function SignUpPage() {
             </CardHeader>
 
             <CardContent className="space-y-6">
-              <form className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                    {error}
+                  </div>
+                )}
+                
+                {success && (
+                  <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+                    {success}
+                  </div>
+                )}
+
                 {/* Full Name Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="name" className="text-sm font-medium text-gray-700">
                     Full Name
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
-                      id="fullName"
+                      id="name"
+                      name="name"
                       type="text"
                       placeholder="Enter your full name"
+                      value={formData.name}
+                      onChange={handleChange}
                       className="pl-10 h-12 border-gray-300 focus:border-[#d8bf78] focus:ring-[#d8bf78]"
+                      required
                     />
                   </div>
                 </div>
@@ -74,25 +155,13 @@ export default function SignUpPage() {
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
                       id="email"
+                      name="email"
                       type="email"
                       placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleChange}
                       className="pl-10 h-12 border-gray-300 focus:border-[#d8bf78] focus:ring-[#d8bf78]"
-                    />
-                  </div>
-                </div>
-
-                {/* Phone Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
-                    Phone Number
-                  </Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      className="pl-10 h-12 border-gray-300 focus:border-[#d8bf78] focus:ring-[#d8bf78]"
+                      required
                     />
                   </div>
                 </div>
@@ -106,9 +175,13 @@ export default function SignUpPage() {
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
                       id="password"
+                      name="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Create a password"
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleChange}
                       className="pl-10 pr-10 h-12 border-gray-300 focus:border-[#d8bf78] focus:ring-[#d8bf78]"
+                      required
                     />
                     <button
                       type="button"
@@ -129,9 +202,13 @@ export default function SignUpPage() {
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
                       id="confirmPassword"
+                      name="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirm your password"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
                       className="pl-10 pr-10 h-12 border-gray-300 focus:border-[#d8bf78] focus:ring-[#d8bf78]"
+                      required
                     />
                     <button
                       type="button"
@@ -143,11 +220,12 @@ export default function SignUpPage() {
                   </div>
                 </div>
 
-                {/* Terms & Privacy */}
+                {/* Terms and Conditions */}
                 <div className="flex items-start space-x-2">
                   <input
                     id="terms"
                     type="checkbox"
+                    required
                     className="mt-1 rounded border-gray-300 text-[#d8bf78] focus:ring-[#d8bf78]"
                   />
                   <Label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
@@ -163,8 +241,19 @@ export default function SignUpPage() {
                 </div>
 
                 {/* Sign Up Button */}
-                <Button className="w-full h-12 bg-[#d8bf78] hover:bg-[#c4a86a] text-white font-medium">
-                  Create Account
+                <Button 
+                  type="submit"
+                  className="w-full h-12 bg-[#d8bf78] hover:bg-[#c4a86a] text-white font-medium"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Creating Account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
                 </Button>
               </form>
 

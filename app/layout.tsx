@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ClientBody from "./ClientBody";
 import Script from "next/script";
+import AuthProvider from "./providers/AuthProvider";
 
 export const metadata: Metadata = {
   title: "BigDentist - Dental Education Platform",
@@ -22,7 +23,9 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className="antialiased font-sans">
-        <ClientBody>{children}</ClientBody>
+        <AuthProvider>
+          <ClientBody>{children}</ClientBody>
+        </AuthProvider>
       </body>
     </html>
   );
