@@ -1,3 +1,16 @@
 {
+  "/_not-found": "app/_not-found.js",
+  "/auth/forgot-password/page": "app/auth/forgot-password/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/signup/page": "app/auth/signup/page.js",
+  "/books/page": "app/books/page.js",
+  "/checkout/page": "app/checkout/page.js",
+  "/checkout/success/page": "app/checkout/success/page.js",
+  "/courses/[id]/page": "app/courses/[id]/page.js",
+  "/courses/page": "app/courses/page.js",
+  "/diplomas/page": "app/diplomas/page.js",
+  "/learn/course/[id]/page": "app/learn/course/[id]/page.js",
+  "/learn/course/[id]/resources/page": "app/learn/course/[id]/resources/page.js",
+  "/learn/page": "app/learn/page.js",
   "/page": "app/page.js"
 }
