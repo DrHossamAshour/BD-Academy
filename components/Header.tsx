@@ -1,12 +1,25 @@
-"use client";
+use client;
 
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push("/"); // Redirect to home page after logout
+  };
+
+  // Optionally, determine dashboard link based on user role
+  // For simplicity, redirect to /dashboard
+  const dashboardLink = "/dashboard";
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -43,12 +56,32 @@ export default function Header() {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            <Button variant="outline" className="text-gray-700 border-gray-300 hover:bg-gray-50" asChild>
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
-            <Button className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white" asChild>
-              <Link href="/auth/signup">Sign Up</Link>
-            </Button>
+            {status === "loading" ? null : session?.user ? (
+              <>
+                <Button
+                  className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white"
+                  asChild
+                >
+                  <Link href={dashboardLink}>Dashboard</Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-gray-700 border-gray-300 hover:bg-gray-50"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" className="text-gray-700 border-gray-300 hover:bg-gray-50" asChild>
+                  <Link href="/auth/login">Sign In</Link>
+                </Button>
+                <Button className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white" asChild>
+                  <Link href="/auth/signup">Sign Up</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -79,12 +112,35 @@ export default function Header() {
                 Monthly Courses
               </Link>
               <div className="flex flex-col space-y-2 pt-4">
-                <Button variant="outline" className="text-gray-700 border-gray-300 hover:bg-gray-50" asChild>
-                  <Link href="/auth/login">Sign In</Link>
-                </Button>
-                <Button className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white" asChild>
-                  <Link href="/auth/signup">Sign Up</Link>
-                </Button>
+                {status === "loading" ? null : session?.user ? (
+                  <>
+                    <Button
+                      className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white"
+                      asChild
+                    >
+                      <Link href={dashboardLink}>Dashboard</Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="text-gray-700 border-gray-300 hover:bg-gray-50"
+                      onClick={() => {
+                        handleLogout();
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" className="text-gray-700 border-gray-300 hover:bg-gray-50" asChild>
+                      <Link href="/auth/login">Sign In</Link>
+                    </Button>
+                    <Button className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white" asChild>
+                      <Link href="/auth/signup">Sign Up</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>
