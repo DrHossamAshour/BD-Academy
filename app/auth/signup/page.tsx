@@ -66,7 +66,14 @@ export default function SignUpPage() {
       if (response.ok) {
         setSuccess("Account created successfully! Please sign in.");
         setTimeout(() => {
-          router.push("/auth/login");
+          // Check if user was trying to access checkout
+          const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+          if (redirectUrl) {
+            // Keep the redirect URL for after login
+            router.push("/auth/login");
+          } else {
+            router.push("/auth/login");
+          }
         }, 2000);
       } else {
         setError(data.error || "An error occurred during registration");

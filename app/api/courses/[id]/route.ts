@@ -1,41 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import dbConnect from '@/lib/db';
-import Course from '@/lib/models/Course';
-import Lesson from '@/lib/models/Lesson';
-import User from '@/lib/models/User';
+import { authOptions } from '../../auth/[...nextauth]/route';
+import { courseDB } from '@/lib/database';
 
+// GET - Fetch a single course by ID
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    await dbConnect();
-
-    const course = await Course.findById(params.id)
-      .populate('instructor', 'name avatar')
-      .populate('lessons');
-
-    if (!course) {
-      return NextResponse.json(
-        { error: 'Course not found' },
-        { status: 404 }
-      );
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get lessons for this course
-    const lessons = await Lesson.find({ courseId: params.id })
-      .sort({ order: 1 });
+    if (session.user.role !== 'instructor' && session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const course = await courseDB.getCourseById(params.id);
+
+    if (!course) {
+      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    }
+
+    // Check if the instructor owns this course (unless admin)
+    if (session.user.role === 'instructor' && course.instructorId !== session.user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     return NextResponse.json({
-      course: {
-        ...course.toObject(),
-        lessons,
-      },
+      success: true,
+      data: course
     });
-
   } catch (error) {
-    console.error('Course fetch error:', error);
+    console.error('Error fetching course:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -43,52 +43,60 @@ export async function GET(
   }
 }
 
+// PUT - Update a course
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     
     if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await dbConnect();
+    if (session.user.role !== 'instructor' && session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
-    const course = await Course.findById(params.id);
-    
+    const course = await courseDB.getCourseById(params.id);
+
     if (!course) {
+      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    }
+
+    // Check if the instructor owns this course (unless admin)
+    if (session.user.role === 'instructor' && course.instructorId !== session.user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const updateData = await request.json();
+
+    // Validate required fields
+    if (!updateData.title || !updateData.description || !updateData.price) {
       return NextResponse.json(
-        { error: 'Course not found' },
-        { status: 404 }
+        { error: 'Missing required fields' },
+        { status: 400 }
       );
     }
 
-    // Check if user owns the course or is admin
-    const user = await User.findById(session.user.id);
-    if (!user || (course.instructor.toString() !== session.user.id && user.role !== 'admin')) {
-      return NextResponse.json(
-        { error: 'Forbidden - You can only edit your own courses' },
-        { status: 403 }
-      );
+    // Update the course using MongoDB
+    const updatedCourse = await courseDB.updateCourse(params.id, updateData);
+
+    if (!updatedCourse) {
+      return NextResponse.json({ error: 'Failed to update course' }, { status: 500 });
     }
 
-    const body = await request.json();
-    
-    const updatedCourse = await Course.findByIdAndUpdate(
-      params.id,
-      body,
-      { new: true }
-    ).populate('instructor', 'name avatar');
+    console.log('Course updated successfully in MongoDB:', params.id);
 
-    return NextResponse.json({ course: updatedCourse });
+    return NextResponse.json({
+      success: true,
+      data: updatedCourse,
+      message: 'Course updated successfully'
+    });
 
   } catch (error) {
-    console.error('Course update error:', error);
+    console.error('Error updating course:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -96,50 +104,49 @@ export async function PUT(
   }
 }
 
+// DELETE - Delete a course
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     
     if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await dbConnect();
+    if (session.user.role !== 'instructor' && session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
-    const course = await Course.findById(params.id);
-    
+    const course = await courseDB.getCourseById(params.id);
+
     if (!course) {
-      return NextResponse.json(
-        { error: 'Course not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
-    // Check if user owns the course or is admin
-    const user = await User.findById(session.user.id);
-    if (!user || (course.instructor.toString() !== session.user.id && user.role !== 'admin')) {
-      return NextResponse.json(
-        { error: 'Forbidden - You can only delete your own courses' },
-        { status: 403 }
-      );
+    // Check if the instructor owns this course (unless admin)
+    if (session.user.role === 'instructor' && course.instructorId !== session.user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Delete all lessons for this course
-    await Lesson.deleteMany({ courseId: params.id });
-    
-    // Delete the course
-    await Course.findByIdAndDelete(params.id);
+    // Delete the course using MongoDB
+    const success = await courseDB.deleteCourse(params.id);
 
-    return NextResponse.json({ message: 'Course deleted successfully' });
+    if (!success) {
+      return NextResponse.json({ error: 'Failed to delete course' }, { status: 500 });
+    }
+
+    console.log('Course deleted successfully from MongoDB:', params.id);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Course deleted successfully'
+    });
 
   } catch (error) {
-    console.error('Course deletion error:', error);
+    console.error('Error deleting course:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

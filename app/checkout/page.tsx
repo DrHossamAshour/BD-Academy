@@ -16,428 +16,371 @@ import {
   Award,
   Users,
   Shield,
-  ArrowLeft
+  ArrowLeft,
+  UserPlus,
+  LogIn
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
-
-// Mock course data for checkout
-interface CheckoutCourse {
-  id: number;
-  title: string;
-  image: string;
-  instructor: string;
-  duration: string;
-  lessons: number;
-  rating: number;
-  students: number;
-  price: string;
-  originalPrice?: string;
-  features: string[];
-}
-
-const checkoutCourseData: { [key: string]: CheckoutCourse } = {
-  "1": {
-    id: 1,
-    title: "Performance Marketing Mastery",
-    image: "https://ext.same-assets.com/1352620099/2409258185.webp",
-    instructor: "Ahmed Hassan",
-    duration: "5 hours",
-    lessons: 45,
-    rating: 4.8,
-    students: 15420,
-    price: "$29",
-    originalPrice: "$99",
-    features: [
-      "Lifetime access to course content",
-      "45 video lessons and resources",
-      "Certificate of completion",
-      "Mobile and desktop access",
-      "Download resources for offline viewing",
-      "Direct access to instructor"
-    ]
-  },
-  "2": {
-    id: 2,
-    title: "Visual Content Creation",
-    image: "https://ext.same-assets.com/1352620099/3921090386.webp",
-    instructor: "Sarah Johnson",
-    duration: "3 hours",
-    lessons: 25,
-    rating: 4.9,
-    students: 18750,
-    price: "$29",
-    originalPrice: "$79",
-    features: [
-      "Lifetime access to course content",
-      "25 video lessons and resources",
-      "Certificate of completion",
-      "Mobile and desktop access",
-      "Design templates and resources",
-      "Direct access to instructor"
-    ]
-  }
-};
+import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 export default function CheckoutPage() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
-  const courseId = searchParams.get('course');
-  const courseTitle = searchParams.get('title');
-  const coursePrice = searchParams.get('price');
+  const router = useRouter();
+  const courseId = searchParams.get('courseId');
+  
+  const [course, setCourse] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: ''
+  });
 
-  const [paymentMethod, setPaymentMethod] = useState('card');
-  const [isProcessing, setIsProcessing] = useState(false);
+  // Fetch course data from database
+  useEffect(() => {
+    const fetchCourse = async () => {
+      if (!courseId) {
+        setLoading(false);
+        return;
+      }
 
-  const course = courseId ? checkoutCourseData[courseId] : null;
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/courses/${courseId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setCourse(data.data);
+        } else {
+          console.error('Failed to fetch course');
+        }
+      } catch (error) {
+        console.error('Error fetching course:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!course && !courseTitle) {
+    fetchCourse();
+  }, [courseId]);
+
+  // Check authentication
+  useEffect(() => {
+    if (!session?.user) {
+      // Store the intended course in sessionStorage and redirect to login
+      if (courseId) {
+        sessionStorage.setItem('redirectAfterLogin', `/checkout?courseId=${courseId}`);
+      }
+      router.push('/auth/login');
+    }
+  }, [session, courseId, router]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!course) {
+      alert('No course selected');
+      return;
+    }
+
+    try {
+      // Create payment intent
+      const response = await fetch('/api/payments/intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          courseId: course._id,
+          courseTitle: course.title,
+          amount: course.price,
+          customerEmail: formData.email,
+          customerName: `${formData.firstName} ${formData.lastName}`
+        }),
+      });
+
+      if (response.ok) {
+        const { clientSecret } = await response.json();
+        // Redirect to success page
+        router.push(`/checkout/success?courseId=${course._id}`);
+      } else {
+        alert('Payment setup failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Payment failed. Please try again.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#d8bf78]"></div>
+      </div>
+    );
+  }
+
+  if (!courseId || !course) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">No Course Selected</h1>
-          <p className="text-gray-600 mb-8">Please select a course to continue with checkout.</p>
-          <Link href="/courses">
-            <Button className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white">
-              Browse Courses
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-2xl mx-auto text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">No Course Selected</h1>
+            <p className="text-gray-600 mb-8">Please select a course to continue with checkout.</p>
+            <Button asChild>
+              <Link href="/courses">Browse Courses</Link>
             </Button>
-          </Link>
+          </div>
         </div>
         <Footer />
       </div>
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      // Redirect to success page
-      window.location.href = `/checkout/success?course=${courseId}&title=${encodeURIComponent(courseTitle || course?.title || '')}`;
-    }, 2000);
-  };
-
-  const displayCourse = course || {
-    title: courseTitle,
-    price: coursePrice,
-    image: "https://ext.same-assets.com/1352620099/2409258185.webp",
-    instructor: "Expert Instructor",
-    features: [
-      "Lifetime access to course content",
-      "Video lessons and resources",
-      "Certificate of completion",
-      "Mobile and desktop access"
-    ]
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      {/* Breadcrumb */}
-      <section className="bg-white border-b py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Link href="/courses" className="hover:text-[#d8bf78]">Courses</Link>
-            <span className="text-gray-400">/</span>
-            <Link href={`/courses/${courseId}`} className="hover:text-[#d8bf78]">
-              {displayCourse.title}
-            </Link>
-            <span>/</span>
-            <span className="text-gray-800">Checkout</span>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Link href="/courses" className="text-[#d8bf78] hover:text-[#c4a86a] text-sm flex items-center">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Courses
+          </Link>
         </div>
-      </section>
 
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Payment Form */}
-            <div className="lg:col-span-2">
-              <div className="mb-6">
-                <Link href="/courses" className="inline-flex items-center text-gray-600 hover:text-[#d8bf78]">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Courses
-                </Link>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Lock className="w-5 h-5 text-green-600" />
-                    <span>Secure Checkout</span>
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent className="space-y-6">
-                  {/* Payment Method Selection */}
-                  <div>
-                    <Label className="text-base font-semibold mb-4 block">Payment Method</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <button
-                        onClick={() => setPaymentMethod('card')}
-                        className={`p-4 border rounded-lg flex items-center justify-center space-x-2 transition-colors ${
-                          paymentMethod === 'card'
-                            ? 'border-[#d8bf78] bg-[#d8bf78]/10 text-[#d8bf78]'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <CreditCard className="w-5 h-5" />
-                        <span>Credit Card</span>
-                      </button>
-                      <button
-                        onClick={() => setPaymentMethod('paypal')}
-                        className={`p-4 border rounded-lg flex items-center justify-center space-x-2 transition-colors ${
-                          paymentMethod === 'paypal'
-                            ? 'border-[#d8bf78] bg-[#d8bf78]/10 text-[#d8bf78]'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="w-5 h-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">P</div>
-                        <span>PayPal</span>
-                      </button>
-                      <button
-                        onClick={() => setPaymentMethod('apple')}
-                        className={`p-4 border rounded-lg flex items-center justify-center space-x-2 transition-colors ${
-                          paymentMethod === 'apple'
-                            ? 'border-[#d8bf78] bg-[#d8bf78]/10 text-[#d8bf78]'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="w-5 h-5 bg-black rounded text-white text-xs flex items-center justify-center font-bold">A</div>
-                        <span>Apple Pay</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    {paymentMethod === 'card' && (
-                      <>
-                        {/* Billing Information */}
-                        <div>
-                          <h3 className="text-lg font-semibold mb-4">Billing Information</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="firstName">First Name</Label>
-                              <Input id="firstName" placeholder="John" required />
-                            </div>
-                            <div>
-                              <Label htmlFor="lastName">Last Name</Label>
-                              <Input id="lastName" placeholder="Doe" required />
-                            </div>
-                            <div className="md:col-span-2">
-                              <Label htmlFor="email">Email Address</Label>
-                              <Input id="email" type="email" placeholder="john@example.com" required />
-                            </div>
-                            <div className="md:col-span-2">
-                              <Label htmlFor="address">Address</Label>
-                              <Input id="address" placeholder="123 Main Street" required />
-                            </div>
-                            <div>
-                              <Label htmlFor="city">City</Label>
-                              <Input id="city" placeholder="New York" required />
-                            </div>
-                            <div>
-                              <Label htmlFor="country">Country</Label>
-                              <Input id="country" placeholder="United States" required />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Payment Details */}
-                        <div>
-                          <h3 className="text-lg font-semibold mb-4">Payment Details</h3>
-                          <div className="space-y-4">
-                            <div>
-                              <Label htmlFor="cardNumber">Card Number</Label>
-                              <Input
-                                id="cardNumber"
-                                placeholder="1234 5678 9012 3456"
-                                required
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="expiry">Expiry Date</Label>
-                                <Input
-                                  id="expiry"
-                                  placeholder="MM/YY"
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="cvv">CVV</Label>
-                                <Input
-                                  id="cvv"
-                                  placeholder="123"
-                                  required
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Terms and Conditions */}
-                    <div className="flex items-start space-x-2">
-                      <input
-                        id="terms"
-                        type="checkbox"
-                        required
-                        className="mt-1 rounded border-gray-300 text-[#d8bf78] focus:ring-[#d8bf78]"
-                      />
-                      <Label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
-                        I agree to the{" "}
-                        <Link href="/terms" className="text-[#d8bf78] hover:text-[#c4a86a]">
-                          Terms of Service
-                        </Link>{" "}
-                        and{" "}
-                        <Link href="/privacy" className="text-[#d8bf78] hover:text-[#c4a86a]">
-                          Privacy Policy
-                        </Link>
-                      </Label>
-                    </div>
-
-                    {/* Submit Button */}
-                    <Button
-                      type="submit"
-                      className="w-full bg-[#d8bf78] hover:bg-[#c4a86a] text-white font-semibold h-12"
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Processing Payment...
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-4 h-4 mr-2" />
-                          Complete Purchase {displayCourse.price}
-                        </>
-                      )}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-
-              {/* Security Notice */}
-              <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center space-x-2 text-green-800">
-                  <Shield className="w-5 h-5" />
-                  <span className="font-semibold">Your payment is secure</span>
-                </div>
-                <p className="text-green-700 text-sm mt-2">
-                  We use industry-standard encryption to protect your payment information. Your data is safe with us.
-                </p>
-              </div>
-            </div>
-
-            {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <Card className="sticky top-8">
-                <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
-                </CardHeader>
-
-                <CardContent className="space-y-6">
-                  {/* Course Info */}
-                  <div className="flex space-x-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Course Summary */}
+          <div>
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Lock className="w-5 h-5 mr-2 text-[#d8bf78]" />
+                  Course Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-start space-x-4">
+                  <div className="relative w-24 h-24 flex-shrink-0">
                     <Image
-                      src={displayCourse.image || "/placeholder-course.jpg"}
-                      alt={displayCourse.title || "Course"}
-                      width={80}
-                      height={60}
-                      className="w-20 h-15 object-cover rounded"
+                      src={course.image}
+                      alt={course.title}
+                      fill
+                      className="object-cover rounded-lg"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "https://ext.same-assets.com/1352620099/2409258185.webp";
+                      }}
+                      unoptimized={course.image?.startsWith('/uploads/')}
                     />
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800 line-clamp-2">
-                        {displayCourse.title || "Course"}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        by {displayCourse.instructor || "Instructor"}
-                      </p>
-                    </div>
                   </div>
-
-                  {/* Course Stats */}
-                  {course && (
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <Clock className="w-4 h-4 text-gray-500" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg text-gray-900 mb-2">{course.title}</h3>
+                    <p className="text-sm text-gray-600 mb-2">Instructor: {course.instructor}</p>
+                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
                         <span>{course.duration}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Award className="w-4 h-4 text-gray-500" />
-                        <span>{course.lessons} lessons</span>
+                      <div className="flex items-center">
+                        <Users className="w-4 h-4 mr-1" />
+                        <span>{course.students || 0} students</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Star className="w-4 h-4 text-yellow-400" />
-                        <span>{course.rating} rating</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Users className="w-4 h-4 text-gray-500" />
-                        <span>{course.students.toLocaleString()} students</span>
+                      <div className="flex items-center">
+                        <Star className="w-4 h-4 mr-1 text-yellow-500 fill-current" />
+                        <span>{course.rating || 4.5}</span>
                       </div>
                     </div>
-                  )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-                  {/* Features */}
+            {/* Course Features */}
+            <Card>
+              <CardHeader>
+                <CardTitle>What's Included</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[
+                    "Lifetime access to course content",
+                    `${course.curriculum?.reduce((total: number, section: any) => total + (section.lessons?.length || 0), 0) || 0} video lessons and resources`,
+                    "Certificate of completion",
+                    "Mobile and desktop access",
+                    "Download resources for offline viewing",
+                    "Direct access to instructor",
+                    "Advanced dental techniques",
+                    "Professional development credits"
+                  ].map((feature, index) => (
+                    <div key={index} className="flex items-center">
+                      <Check className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
+                      <span className="text-gray-700">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Checkout Form */}
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Complete Your Purchase</CardTitle>
+                <p className="text-sm text-gray-600">Fill in your details to complete the enrollment</p>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Personal Information */}
                   <div>
-                    <h4 className="font-semibold mb-3">What's included:</h4>
-                    <ul className="space-y-2">
-                      {displayCourse.features?.map((feature, index) => (
-                        <li key={index} className="flex items-center space-x-2 text-sm text-gray-600">
-                          <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="firstName">First Name *</Label>
+                        <Input
+                          id="firstName"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="lastName">Last Name *</Label>
+                        <Input
+                          id="lastName"
+                          name="lastName"
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="email">Email *</Label>
+                        <Input
+                          id="email"
+                          name="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="phone">Phone</Label>
+                        <Input
+                          id="phone"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Price Summary */}
-                  <div className="border-t pt-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>Course Price:</span>
-                        {course?.originalPrice && (
-                          <span className="text-gray-400 line-through">{course.originalPrice}</span>
-                        )}
+                  {/* Address Information */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Address Information</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="address">Address *</Label>
+                        <Input
+                          id="address"
+                          name="address"
+                          value={formData.address}
+                          onChange={handleInputChange}
+                          required
+                        />
                       </div>
-                      {course?.originalPrice && (
-                        <div className="flex justify-between text-green-600">
-                          <span>Discount:</span>
-                          <span>-{parseInt(course.originalPrice.slice(1)) - parseInt(course.price.slice(1))}$</span>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="city">City *</Label>
+                          <Input
+                            id="city"
+                            name="city"
+                            value={formData.city}
+                            onChange={handleInputChange}
+                            required
+                          />
                         </div>
-                      )}
-                      <div className="flex justify-between text-lg font-bold border-t pt-2">
-                        <span>Total:</span>
-                        <span className="text-[#d8bf78]">{displayCourse.price}</span>
+                        <div>
+                          <Label htmlFor="state">State/Province *</Label>
+                          <Input
+                            id="state"
+                            name="state"
+                            value={formData.state}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="zipCode">ZIP/Postal Code *</Label>
+                          <Input
+                            id="zipCode"
+                            name="zipCode"
+                            value={formData.zipCode}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="country">Country *</Label>
+                        <Input
+                          id="country"
+                          name="country"
+                          value={formData.country}
+                          onChange={handleInputChange}
+                          required
+                        />
                       </div>
                     </div>
                   </div>
 
-                  {/* Money Back Guarantee */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Shield className="w-5 h-5 text-green-600" />
-                      <span className="font-semibold text-gray-800">30-Day Money-Back Guarantee</span>
+                  {/* Payment Summary */}
+                  <div className="border-t pt-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-lg font-semibold">Total Amount</span>
+                      <span className="text-2xl font-bold text-[#d8bf78]">${course.price}</span>
                     </div>
-                    <p className="text-sm text-gray-600">
-                      Not satisfied? Get a full refund within 30 days, no questions asked.
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-[#d8bf78] hover:bg-[#c4a86a] text-white py-3"
+                    >
+                      <CreditCard className="w-5 h-5 mr-2" />
+                      Complete Purchase
+                    </Button>
+                    
+                    <p className="text-xs text-gray-500 mt-3 text-center">
+                      By completing this purchase, you agree to our Terms of Service and Privacy Policy
                     </p>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                </form>
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </section>
+      </div>
 
       <Footer />
     </div>

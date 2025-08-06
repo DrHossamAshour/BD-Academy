@@ -1,25 +1,58 @@
-use client;
+"use client";
 
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Home } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [showAuthButtons, setShowAuthButtons] = useState(false);
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Ensure component is mounted on client side
+  useEffect(() => {
+    setIsClient(true);
+    
+    // Show auth buttons after a short delay to prevent long loading
+    const timer = setTimeout(() => {
+      setShowAuthButtons(true);
+    }, 1000); // Show buttons after 1 second even if session is still loading
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleLogout = async () => {
     await signOut({ redirect: false });
     router.push("/"); // Redirect to home page after logout
   };
 
-  // Optionally, determine dashboard link based on user role
-  // For simplicity, redirect to /dashboard
-  const dashboardLink = "/dashboard";
+  // Check if we're on a dashboard page
+  const isOnDashboard = pathname?.startsWith('/dashboard');
+  
+  // Determine the appropriate button text and link
+  const getDashboardButton = () => {
+    if (isOnDashboard) {
+      return {
+        text: "Go to Site",
+        href: "/",
+        icon: Home
+      };
+    } else {
+      return {
+        text: "Dashboard",
+        href: "/dashboard",
+        icon: null
+      };
+    }
+  };
+
+  const dashboardButton = getDashboardButton();
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -56,13 +89,22 @@ export default function Header() {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            {status === "loading" ? null : session?.user ? (
+            {!isClient || (status === "loading" && !showAuthButtons) ? (
+              // Show loading state instead of hiding completely
+              <div className="flex items-center space-x-3">
+                <div className="w-20 h-9 bg-gray-200 rounded-md animate-pulse"></div>
+                <div className="w-16 h-9 bg-gray-200 rounded-md animate-pulse"></div>
+              </div>
+            ) : session?.user ? (
               <>
                 <Button
                   className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white"
                   asChild
                 >
-                  <Link href={dashboardLink}>Dashboard</Link>
+                  <Link href={dashboardButton.href}>
+                    {dashboardButton.icon && <dashboardButton.icon className="w-4 h-4 mr-2" />}
+                    {dashboardButton.text}
+                  </Link>
                 </Button>
                 <Button
                   variant="outline"
@@ -112,13 +154,22 @@ export default function Header() {
                 Monthly Courses
               </Link>
               <div className="flex flex-col space-y-2 pt-4">
-                {status === "loading" ? null : session?.user ? (
+                {!isClient || (status === "loading" && !showAuthButtons) ? (
+                  // Show loading state for mobile menu
+                  <div className="flex flex-col space-y-2">
+                    <div className="w-full h-9 bg-gray-200 rounded-md animate-pulse"></div>
+                    <div className="w-full h-9 bg-gray-200 rounded-md animate-pulse"></div>
+                  </div>
+                ) : session?.user ? (
                   <>
                     <Button
                       className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white"
                       asChild
                     >
-                      <Link href={dashboardLink}>Dashboard</Link>
+                      <Link href={dashboardButton.href}>
+                        {dashboardButton.icon && <dashboardButton.icon className="w-4 h-4 mr-2" />}
+                        {dashboardButton.text}
+                      </Link>
                     </Button>
                     <Button
                       variant="outline"

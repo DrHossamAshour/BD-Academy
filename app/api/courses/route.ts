@@ -1,59 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import dbConnect from '@/lib/db';
-import Course from '@/lib/models/Course';
-import User from '@/lib/models/User';
+import { authOptions } from '../auth/[...nextauth]/route';
+import { courseDB } from '@/lib/database';
 
+// GET - Fetch all courses for an instructor
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
-
-    const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category');
-    const level = searchParams.get('level');
-    const search = searchParams.get('search');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const page = parseInt(searchParams.get('page') || '1');
-
-    // Build query
-    let query: any = { isPublished: true };
-
-    if (category && category !== 'All') {
-      query.category = category;
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (level && level !== 'All') {
-      query.level = level;
+    if (session.user.role !== 'instructor') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
-    }
+    console.log('Fetching courses for instructor ID:', session.user.id);
 
-    // Get courses with pagination
-    const courses = await Course.find(query)
-      .populate('instructor', 'name avatar')
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .skip((page - 1) * limit);
-
-    const totalCourses = await Course.countDocuments(query);
+    // Get courses for the instructor from MongoDB
+    const instructorCourses = await courseDB.getInstructorCourses(session.user.id);
+    
+    console.log('Instructor courses found:', instructorCourses.length);
 
     return NextResponse.json({
-      courses,
-      pagination: {
-        page,
-        limit,
-        total: totalCourses,
-        pages: Math.ceil(totalCourses / limit),
-      },
+      success: true,
+      data: instructorCourses,
+      total: instructorCourses.length,
+      debug: {
+        instructorId: session.user.id,
+        instructorCoursesFound: instructorCourses.length
+      }
     });
-
   } catch (error) {
-    console.error('Courses fetch error:', error);
+    console.error('Error fetching courses:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -61,45 +41,46 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// POST - Create a new course
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     
     if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (session.user.role !== 'instructor') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const courseData = await request.json();
+
+    // Validate required fields
+    if (!courseData.title || !courseData.description || !courseData.price) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+        { error: 'Missing required fields' },
+        { status: 400 }
       );
     }
 
-    await dbConnect();
-
-    // Check if user is instructor or admin
-    const user = await User.findById(session.user.id);
-    if (!user || !['instructor', 'admin'].includes(user.role)) {
-      return NextResponse.json(
-        { error: 'Forbidden - Insufficient permissions' },
-        { status: 403 }
-      );
-    }
-
-    const body = await request.json();
-    
-    const course = await Course.create({
-      ...body,
-      instructor: session.user.id,
+    // Create new course using MongoDB
+    const newCourse = await courseDB.createCourse({
+      ...courseData,
+      instructor: session.user.name,
+      instructorId: session.user.id
     });
 
-    const populatedCourse = await Course.findById(course._id)
-      .populate('instructor', 'name avatar');
+    console.log('Course created successfully in MongoDB:', newCourse._id);
 
-    return NextResponse.json(
-      { course: populatedCourse },
-      { status: 201 }
-    );
+    return NextResponse.json({
+      success: true,
+      data: newCourse,
+      message: 'Course created successfully'
+    }, { status: 201 });
 
   } catch (error) {
-    console.error('Course creation error:', error);
+    console.error('Error creating course:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

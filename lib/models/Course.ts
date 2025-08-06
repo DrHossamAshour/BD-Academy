@@ -1,6 +1,41 @@
 import mongoose from 'mongoose';
 
-const CourseSchema = new mongoose.Schema({
+const CourseLessonSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  type: {
+    type: String,
+    enum: ['video', 'text', 'quiz', 'assignment'],
+    default: 'video',
+  },
+  duration: {
+    type: String,
+    required: true,
+  },
+  content: String,
+  vimeoUrl: String,
+  vimeoId: String,
+  isProtected: {
+    type: Boolean,
+    default: true,
+  },
+  isPublic: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const CourseSectionSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true,
+  },
   title: {
     type: String,
     required: true,
@@ -9,27 +44,17 @@ const CourseSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  shortDescription: {
-    type: String,
-  },
-  image: {
+  lessons: [CourseLessonSchema],
+});
+
+const CourseSchema = new mongoose.Schema({
+  title: {
     type: String,
     required: true,
   },
-  price: {
-    type: Number,
-    required: true,
-  },
-  originalPrice: {
-    type: Number,
-  },
-  currency: {
+  subtitle: String,
+  description: {
     type: String,
-    default: 'USD',
-  },
-  instructor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
     required: true,
   },
   category: {
@@ -38,41 +63,95 @@ const CourseSchema = new mongoose.Schema({
   },
   level: {
     type: String,
-    enum: ['Beginner', 'Intermediate', 'Advanced'],
     required: true,
   },
+  language: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  originalPrice: Number,
   duration: {
-    type: String, // e.g., "5 hours"
+    type: String,
     required: true,
   },
-  lessons: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Lesson',
-  }],
-  rating: {
-    type: Number,
-    default: 0,
-    min: 0,
-    max: 5,
-  },
-  reviewCount: {
+  lessons: {
     type: Number,
     default: 0,
   },
-  enrollmentCount: {
-    type: Number,
-    default: 0,
+  image: {
+    type: String,
+    required: true,
   },
-  features: [String],
+  video: String,
   requirements: [String],
-  learningOutcomes: [String],
+  whatYouLearn: [String],
+  sections: [CourseSectionSchema],
   isPublished: {
     type: Boolean,
     default: false,
   },
-  publishedAt: Date,
+  isFeatured: {
+    type: Boolean,
+    default: false,
+  },
+  enableCertificate: {
+    type: Boolean,
+    default: true,
+  },
+  enableDiscussion: {
+    type: Boolean,
+    default: true,
+  },
+  maxStudents: Number,
+  accessDuration: {
+    type: String,
+    default: 'lifetime',
+  },
+  instructor: {
+    type: String,
+    required: true,
+  },
+  instructorId: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'published', 'pending'],
+    default: 'draft',
+  },
+  students: {
+    type: Number,
+    default: 0,
+  },
+  rating: {
+    type: Number,
+    default: 0,
+  },
+  reviews: {
+    type: Number,
+    default: 0,
+  },
+  revenue: {
+    type: Number,
+    default: 0,
+  },
+  featured: {
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: true,
 });
+
+// Indexes for better performance
+CourseSchema.index({ instructorId: 1, status: 1 });
+CourseSchema.index({ category: 1, status: 1 });
+CourseSchema.index({ isFeatured: 1, status: 1 });
+CourseSchema.index({ title: 'text', description: 'text' });
 
 export default mongoose.models.Course || mongoose.model('Course', CourseSchema);

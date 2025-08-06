@@ -33,7 +33,14 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid email or password");
       } else {
-        router.push("/learn");
+        // Check if user was trying to access checkout
+        const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+        if (redirectUrl) {
+          sessionStorage.removeItem('redirectAfterLogin');
+          router.push(redirectUrl);
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch (err) {
       setError("An error occurred during login");
