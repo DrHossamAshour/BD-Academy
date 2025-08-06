@@ -1,0 +1,560 @@
+{
+  "timestamp": "2025-08-06T19:52:55.034Z",
+  "project": "BigDentist",
+  "version": "1.0.0",
+  "analysis": {
+    "startTime": "2025-08-06T19:52:50.389Z",
+    "issues": [
+      {
+        "issue": "Connection pooling not configured - may cause performance issues",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.803Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.812Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.814Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.817Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.819Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.820Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.822Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.824Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.826Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.827Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.829Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.830Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.832Z"
+      },
+      {
+        "issue": "Input validation missing in route.ts",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.833Z"
+      },
+      {
+        "issue": "TypeScript types missing in CategoryGrid.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.839Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in CategoryGrid.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.840Z"
+      },
+      {
+        "issue": "TypeScript types missing in CourseCarousel.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.841Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in CourseCarousel.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.842Z"
+      },
+      {
+        "issue": "TypeScript types missing in FeaturedCourses.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.843Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in FeaturedCourses.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.843Z"
+      },
+      {
+        "issue": "TypeScript types missing in Footer.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.844Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in Footer.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.845Z"
+      },
+      {
+        "issue": "TypeScript types missing in Header.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.846Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in Header.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.846Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in ImageUpload.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.848Z"
+      },
+      {
+        "issue": "TypeScript types missing in InstructorsSection.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.850Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in InstructorsSection.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.850Z"
+      },
+      {
+        "issue": "TypeScript types missing in StatsSection.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.851Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in StatsSection.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.852Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in badge.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.853Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in button.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.855Z"
+      },
+      {
+        "issue": "TypeScript types missing in card.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.856Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in card.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.857Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in input.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.860Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in label.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.865Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in progress.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.867Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in switch.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.870Z"
+      },
+      {
+        "issue": "TypeScript types missing in table.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.871Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in tabs.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.876Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in textarea.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.877Z"
+      },
+      {
+        "issue": "Accessibility attributes missing in VimeoPlayer.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.879Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.888Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.888Z"
+      },
+      {
+        "issue": "Loading states missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.892Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.895Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.898Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.904Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.905Z"
+      },
+      {
+        "issue": "Loading states missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.907Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.912Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.917Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.917Z"
+      },
+      {
+        "issue": "Loading states missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.918Z"
+      },
+      {
+        "issue": "Metadata missing in ClientBody.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.919Z"
+      },
+      {
+        "issue": "Error handling missing in ClientBody.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.925Z"
+      },
+      {
+        "issue": "Loading states missing in ClientBody.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.927Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.929Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.933Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.940Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.944Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.946Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.946Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.947Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.949Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.950Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.952Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.954Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.957Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.958Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.959Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.961Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.962Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.963Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.965Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.965Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.966Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.967Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.968Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.970Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.971Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.974Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.974Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.976Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.976Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.977Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.978Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.979Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.979Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.980Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.981Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.982Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.982Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.983Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.984Z"
+      },
+      {
+        "issue": "Loading states missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.984Z"
+      },
+      {
+        "issue": "Error handling missing in layout.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.985Z"
+      },
+      {
+        "issue": "Loading states missing in layout.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.986Z"
+      },
+      {
+        "issue": "Metadata missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.988Z"
+      },
+      {
+        "issue": "Error handling missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.990Z"
+      },
+      {
+        "issue": "Loading states missing in page.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.991Z"
+      },
+      {
+        "issue": "Metadata missing in AuthProvider.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.992Z"
+      },
+      {
+        "issue": "Error handling missing in AuthProvider.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.993Z"
+      },
+      {
+        "issue": "Loading states missing in AuthProvider.tsx",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.993Z"
+      },
+      {
+        "issue": "Security headers not configured",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:54.996Z"
+      },
+      {
+        "issue": "No lazy loading implemented",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:55.007Z"
+      },
+      {
+        "issue": "CORS configuration missing",
+        "severity": "warning",
+        "timestamp": "2025-08-06T19:52:55.032Z"
+      }
+    ],
+    "warnings": [],
+    "recommendations": [],
+    "performance": {},
+    "security": {},
+    "codeQuality": {},
+    "dependencies": {},
+    "database": {},
+    "authentication": {},
+    "api": {},
+    "components": {},
+    "pages": {},
+    "utils": {},
+    "types": {},
+    "config": {}
+  },
+  "summary": {
+    "totalIssues": 106,
+    "errors": 0,
+    "warnings": 106,
+    "recommendations": 0
+  }
+}
