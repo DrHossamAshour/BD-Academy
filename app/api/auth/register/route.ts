@@ -3,28 +3,36 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
+import { 
+  withSecurity,
+  authRateLimiter,
+  sanitizedStringSchema,
+  sanitizedEmailSchema,
+  passwordSchema,
+  trackFailedLogin,
+  isLoginBlocked,
+  getClientIP
+} from '@/lib/security';
 
 const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  name: sanitizedStringSchema(100),
+  email: sanitizedEmailSchema,
+  password: passwordSchema,
 });
 
-export async function POST(request: NextRequest) {
+async function registerHandler(request: NextRequest, context: any) {
   try {
-    const body = await request.json();
-    
-    // Validate input
-    const result = registerSchema.safeParse(body);
-    
-    if (!result.success) {
+    const { validatedData } = context;
+    const { name, email, password } = validatedData;
+
+    // Check if IP is blocked due to failed attempts
+    const clientIp = getClientIP(request);
+    if (isLoginBlocked(clientIp)) {
       return NextResponse.json(
-        { error: 'Invalid input', details: result.error.issues },
-        { status: 400 }
+        { error: 'Too many failed attempts. Please try again later.' },
+        { status: 429 }
       );
     }
-
-    const { name, email, password } = result.data;
 
     await dbConnect();
 
@@ -32,39 +40,72 @@ export async function POST(request: NextRequest) {
     const existingUser = await User.findOne({ email });
     
     if (existingUser) {
+      // Track failed attempt (email already exists)
+      trackFailedLogin(clientIp);
       return NextResponse.json(
-        { error: 'User already exists with this email' },
+        { error: 'Registration failed' }, // Don't reveal that email exists
         { status: 409 }
       );
     }
 
-    // Hash password
-    const saltRounds = 12;
+    // Hash password with higher security
+    const saltRounds = 14; // Increased from 12 for better security
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create user
+    // Create user with additional security fields
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
+      emailVerified: false,
+      lastLogin: null,
+      loginAttempts: 0,
+      accountLocked: false,
     });
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user.toObject();
 
+    // Log successful registration
+    console.log(`User registered successfully: ${email} from IP: ${clientIp}`);
+
     return NextResponse.json(
       { 
-        message: 'User created successfully',
-        user: userWithoutPassword
+        message: 'User created successfully. Please verify your email.',
+        user: {
+          id: userWithoutPassword._id,
+          name: userWithoutPassword.name,
+          email: userWithoutPassword.email,
+          emailVerified: userWithoutPassword.emailVerified,
+        }
       },
       { status: 201 }
     );
 
   } catch (error) {
     console.error('Registration error:', error);
+    
+    // Track failed attempt on server error
+    const clientIp = getClientIP(request);
+    trackFailedLogin(clientIp);
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Registration failed' }, // Don't leak internal error details
       { status: 500 }
     );
   }
 }
+
+// Apply comprehensive security to the registration endpoint
+export const POST = withSecurity(registerHandler, {
+  rateLimiter: authRateLimiter,
+  validation: registerSchema,
+  cors: {
+    origin: process.env.NODE_ENV === 'production' 
+      ? [process.env.NEXTAUTH_URL || 'https://yourdomain.com']
+      : true,
+    credentials: true,
+  },
+  securityHeaders: {},
+  logRequests: process.env.NODE_ENV === 'development',
+});

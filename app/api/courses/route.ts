@@ -1,18 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { z } from 'zod';
 import { courseDB } from '@/lib/database';
+import { 
+  withAuthSecurity,
+  generalApiRateLimiter,
+  sanitizedStringSchema,
+  sanitizedHtmlSchema,
+  createSecureHandler
+} from '@/lib/security';
+
+// Input validation schema for course creation
+const createCourseSchema = z.object({
+  title: sanitizedStringSchema(200),
+  description: sanitizedHtmlSchema(5000),
+  price: z.number().min(0).max(10000),
+  category: sanitizedStringSchema(100),
+  level: z.enum(['beginner', 'intermediate', 'advanced']),
+  duration: z.number().min(1).max(500), // Duration in hours
+  thumbnailUrl: z.string().url().optional(),
+  tags: z.array(sanitizedStringSchema(50)).max(10).optional(),
+});
 
 // GET - Fetch all courses for an instructor
-export async function GET(request: NextRequest) {
+async function getCourses(request: NextRequest, context: any) {
   try {
-    const session = await getServerSession(authOptions);
+    const { session } = context;
     
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    if (session.user.role !== 'instructor') {
+    if (session.user.role !== 'instructor' && session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -35,55 +49,75 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching courses:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch courses' },
       { status: 500 }
     );
   }
 }
 
 // POST - Create a new course
-export async function POST(request: NextRequest) {
+async function createCourse(request: NextRequest, context: any) {
   try {
-    const session = await getServerSession(authOptions);
+    const { session, validatedData } = context;
     
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    if (session.user.role !== 'instructor') {
+    if (session.user.role !== 'instructor' && session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const courseData = await request.json();
-
-    // Validate required fields
-    if (!courseData.title || !courseData.description || !courseData.price) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
     }
 
     // Create new course using MongoDB
     const newCourse = await courseDB.createCourse({
-      ...courseData,
+      ...validatedData,
       instructor: session.user.name,
-      instructorId: session.user.id
+      instructorId: session.user.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: 'draft', // Default status
+      enrollmentCount: 0,
     });
 
     console.log('Course created successfully in MongoDB:', newCourse._id);
 
     return NextResponse.json({
       success: true,
-      data: newCourse,
+      data: {
+        id: newCourse._id,
+        title: newCourse.title,
+        description: newCourse.description,
+        price: newCourse.price,
+        status: newCourse.status,
+        createdAt: newCourse.createdAt,
+      },
       message: 'Course created successfully'
     }, { status: 201 });
 
   } catch (error) {
     console.error('Error creating course:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to create course' },
       { status: 500 }
     );
   }
 }
+
+// Create secure handlers using the new security framework
+export const { GET, POST } = createSecureHandler(
+  {
+    GET: getCourses,
+    POST: createCourse,
+  },
+  {
+    rateLimiter: generalApiRateLimiter,
+    auth: {
+      requiredRole: ['instructor', 'admin'],
+    },
+    validation: createCourseSchema, // Only applied to POST requests
+    cors: {
+      origin: process.env.NODE_ENV === 'production' 
+        ? [process.env.NEXTAUTH_URL || 'https://yourdomain.com']
+        : true,
+      credentials: true,
+    },
+    securityHeaders: {},
+    logRequests: process.env.NODE_ENV === 'development',
+  }
+);
