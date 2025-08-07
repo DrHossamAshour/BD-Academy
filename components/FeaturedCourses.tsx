@@ -82,7 +82,7 @@ export default function FeaturedCourses() {
     };
 
     fetchFeaturedCourses();
-  }, []);
+  }, [fallbackCourses]);
 
   const handleEnrollClick = (courseId: string) => {
     if (!session?.user) {

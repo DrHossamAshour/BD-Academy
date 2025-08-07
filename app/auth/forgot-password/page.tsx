@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
                 Forgot Password?
               </CardTitle>
               <p className="text-gray-600 mt-2">
-                No worries! Enter your email address and we'll send you a link to reset your password.
+                No worries! Enter your email address and we&apos;ll send you a link to reset your password.
               </p>
             </CardHeader>
 
@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-medium text-gray-800 mb-2">Need Help?</h4>
                 <p className="text-sm text-gray-600 mb-3">
-                  If you don't receive the reset email within a few minutes, please check your spam folder or contact our support team.
+                  If you don&apos;t receive the reset email within a few minutes, please check your spam folder or contact our support team.
                 </p>
                 <Button variant="outline" size="sm" className="w-full">
                   Contact Support

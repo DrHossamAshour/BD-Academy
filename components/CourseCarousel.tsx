@@ -82,7 +82,7 @@ export default function CourseCarousel() {
     };
 
     fetchCourses();
-  }, []);
+  }, [fallbackCourses]);
 
   // Auto-scroll functionality
   useEffect(() => {

@@ -124,7 +124,7 @@ export default function CourseLearnPage({ params }: { params: { id: string } }) 
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
           <h1 className="text-2xl font-bold mb-4">Course not found</h1>
-          <p className="text-gray-400">The course you're looking for doesn't exist.</p>
+          <p className="text-gray-400">The course you&apos;re looking for doesn&apos;t exist.</p>
         </div>
       </div>
     );

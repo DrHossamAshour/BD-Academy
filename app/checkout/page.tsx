@@ -217,7 +217,7 @@ export default function CheckoutPage() {
             {/* Course Features */}
             <Card>
               <CardHeader>
-                <CardTitle>What's Included</CardTitle>
+                <CardTitle>What&apos;s Included</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">

@@ -92,7 +92,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
         <div className="container mx-auto px-4 py-12">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-800 mb-4">Course Not Found</h1>
-            <p className="text-gray-600 mb-8">The course you're looking for doesn't exist.</p>
+            <p className="text-gray-600 mb-8">The course you&apos;re looking for doesn&apos;t exist.</p>
             <Link href="/dashboard/student">
               <Button className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white">
                 Back to Dashboard

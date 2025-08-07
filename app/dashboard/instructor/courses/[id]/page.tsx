@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,23 +64,7 @@ export default function ViewCoursePage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
 
-  useEffect(() => {
-    if (status === "loading") return;
-
-    if (!session?.user) {
-      router.push("/auth/login");
-      return;
-    }
-
-    if (session.user.role !== "instructor") {
-      router.push("/dashboard");
-      return;
-    }
-
-    loadCourseData();
-  }, [session, status, router, courseId]);
-
-  const loadCourseData = async () => {
+  const loadCourseData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/courses/${courseId}`);
@@ -98,7 +82,23 @@ export default function ViewCoursePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId, router]);
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (!session?.user) {
+      router.push("/auth/login");
+      return;
+    }
+
+    if (session.user.role !== "instructor") {
+      router.push("/dashboard");
+      return;
+    }
+
+    loadCourseData();
+  }, [session, status, router, courseId, loadCourseData]);
 
   const handleLessonClick = (lesson: any) => {
     console.log('Lesson clicked:', lesson);
@@ -154,7 +154,7 @@ export default function ViewCoursePage() {
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Course not found</h3>
-          <p className="text-gray-600 mb-4">The course you're looking for doesn't exist.</p>
+          <p className="text-gray-600 mb-4">The course you&apos;re looking for doesn&apos;t exist.</p>
           <Button onClick={() => router.push('/dashboard/instructor/courses')}>
             Back to Courses
           </Button>

@@ -92,7 +92,7 @@ export default function CoursesPage() {
     };
 
     fetchCourses();
-  }, []);
+  }, [fallbackCourses]);
 
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||

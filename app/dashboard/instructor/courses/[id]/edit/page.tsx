@@ -37,7 +37,7 @@ import {
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -86,9 +86,11 @@ export default function EditCoursePage() {
     whatYouLearn: [""],
     sections: [] as CourseSection[],
     isPublished: false,
+    isAvailable: false,
     isFeatured: false,
     enableCertificate: true,
     enableDiscussion: true,
+    tags: [""],
     maxStudents: "",
     accessDuration: "lifetime"
   });
@@ -97,24 +99,7 @@ export default function EditCoursePage() {
   const VIMEO_TOKEN = "be9a99823ebe2f7b7212d33ce3594e74";
   const [vimeoValidation, setVimeoValidation] = useState<{[key: string]: boolean}>({});
 
-  useEffect(() => {
-    if (status === "loading") return;
-
-    if (!session?.user) {
-      router.push("/auth/login");
-      return;
-    }
-
-    if (session.user.role !== "instructor") {
-      router.push("/dashboard");
-      return;
-    }
-
-    // Load course data
-    loadCourseData();
-  }, [session, status, router, courseId]);
-
-  const loadCourseData = async () => {
+  const loadCourseData = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/courses/${courseId}`);
@@ -144,9 +129,11 @@ export default function EditCoursePage() {
         whatYouLearn: course.whatYouLearn || [""],
         sections: course.sections || [],
         isPublished: course.isPublished || false,
+        isAvailable: course.isAvailable || false,
         isFeatured: course.isFeatured || false,
         enableCertificate: course.enableCertificate !== false,
         enableDiscussion: course.enableDiscussion !== false,
+        tags: course.tags || [""],
         maxStudents: course.maxStudents?.toString() || "",
         accessDuration: course.accessDuration || "lifetime"
       });
@@ -157,7 +144,24 @@ export default function EditCoursePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [courseId, router]);
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (!session?.user) {
+      router.push("/auth/login");
+      return;
+    }
+
+    if (session.user.role !== "instructor") {
+      router.push("/dashboard");
+      return;
+    }
+
+    // Load course data
+    loadCourseData();
+  }, [session, status, router, courseId, loadCourseData]);
 
   if (status === "loading" || isLoading) {
     return (

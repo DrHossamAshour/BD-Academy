@@ -223,7 +223,7 @@ export default function ResourcesPage({ params }: { params: { id: string } }) {
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">🎯 Practice Exercises</h4>
                     <p className="text-gray-600 text-sm">
-                      Use the provided templates and case studies to practice what you've learned.
+                      Use the provided templates and case studies to practice what you&apos;ve learned.
                     </p>
                   </div>
                   <div>

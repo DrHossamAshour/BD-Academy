@@ -133,7 +133,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
       <div className="min-h-screen bg-gray-900">
         <div className="container mx-auto px-4 py-16 text-center">
           <h1 className="text-2xl font-bold text-white mb-4">Course not found</h1>
-          <p className="text-gray-400 mb-8">The course you're looking for doesn't exist or has been removed.</p>
+          <p className="text-gray-400 mb-8">The course you&apos;re looking for doesn&apos;t exist or has been removed.</p>
           <Button asChild className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white">
             <Link href="/courses">Browse All Courses</Link>
           </Button>

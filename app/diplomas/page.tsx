@@ -179,7 +179,7 @@ export default function DiplomasPage() {
               Choose Your Career Path
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Our diploma programs are designed by industry professionals to give you the exact skills needed to excel in today's competitive job market.
+              Our diploma programs are designed by industry professionals to give you the exact skills needed to excel in today&apos;s competitive job market.
             </p>
           </div>
 
@@ -254,7 +254,7 @@ export default function DiplomasPage() {
 
                     {/* Features */}
                     <div className="mb-6">
-                      <h4 className="font-semibold text-gray-800 mb-3">What's Included:</h4>
+                      <h4 className="font-semibold text-gray-800 mb-3">What&apos;s Included:</h4>
                       <ul className="space-y-2">
                         {diploma.features.map((feature, index) => (
                           <li key={index} className="flex items-center space-x-2 text-sm text-gray-600">
@@ -267,7 +267,7 @@ export default function DiplomasPage() {
 
                     {/* Skills */}
                     <div className="mb-6">
-                      <h4 className="font-semibold text-gray-800 mb-3">Skills You'll Learn:</h4>
+                      <h4 className="font-semibold text-gray-800 mb-3">Skills You&apos;ll Learn:</h4>
                       <div className="flex flex-wrap gap-2">
                         {diploma.skills.map((skill, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">

@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -150,6 +150,52 @@ export default function InstructorCoursesPage() {
     averageRating: 0
   });
 
+  const fetchCourses = useCallback(async () => {
+    try {
+      setLoading(true);
+      console.log('Fetching courses for instructor:', session?.user?.id);
+      
+      // Temporarily use debug endpoint to see all courses
+      const response = await fetch('/api/courses/debug');
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('API Response:', data);
+        
+        if (data.data && Array.isArray(data.data)) {
+          setCourses(data.data);
+          
+          // Calculate stats
+          const total = data.data.length;
+          const published = data.data.filter((course: any) => course.isPublished).length;
+          const draft = total - published;
+          const students = data.data.reduce((sum: number, course: any) => sum + (course.students || 0), 0);
+          
+          setStats({
+            totalCourses: total,
+            publishedCourses: published,
+            draftCourses: draft,
+            totalStudents: students,
+            totalRevenue: 0, // We'll calculate this when we have enrollment data
+            averageRating: 0 // We'll calculate this when we have rating data
+          });
+        } else {
+          console.error('Invalid data structure received:', data);
+          setCourses([]);
+        }
+      } else {
+        console.error('Failed to fetch courses:', response.status);
+        setCourses([]);
+      }
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      setCourses([]);
+      alert('Error fetching courses. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [session?.user?.id]);
+
   useEffect(() => {
     if (status === "loading") return;
 
@@ -165,7 +211,7 @@ export default function InstructorCoursesPage() {
 
     // Fetch courses from API
     fetchCourses();
-  }, [session, status, router]);
+  }, [session, status, router, fetchCourses]);
 
   // Check for refresh parameter
   useEffect(() => {
@@ -175,58 +221,7 @@ export default function InstructorCoursesPage() {
       // Clean up the URL
       router.replace('/dashboard/instructor/courses');
     }
-  }, [searchParams, router]);
-
-  const fetchCourses = async () => {
-    try {
-      setLoading(true);
-      console.log('Fetching courses for instructor:', session?.user?.id);
-      
-      // Temporarily use debug endpoint to see all courses
-      const response = await fetch('/api/courses/debug');
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('API Response:', data);
-        
-        // Filter courses for current instructor
-        const instructorCourses = data.data.filter((course: any) => course.instructorId === session?.user?.id);
-        console.log('Filtered courses for instructor:', instructorCourses);
-        
-        setCourses(instructorCourses);
-        
-        // Calculate stats
-        const totalCourses = instructorCourses.length;
-        const publishedCourses = instructorCourses.filter((course: any) => course.status === 'published').length;
-        const draftCourses = instructorCourses.filter((course: any) => course.status === 'draft').length;
-        const totalStudents = instructorCourses.reduce((sum: number, course: any) => sum + (course.students || 0), 0);
-        const totalRevenue = instructorCourses.reduce((sum: number, course: any) => sum + (course.revenue || 0), 0);
-        const averageRating = instructorCourses.length > 0 
-          ? instructorCourses.reduce((sum: number, course: any) => sum + (course.rating || 0), 0) / instructorCourses.length 
-          : 0;
-
-        setStats({
-          totalCourses,
-          publishedCourses,
-          draftCourses,
-          totalStudents,
-          totalRevenue,
-          averageRating
-        });
-        
-        console.log('Courses loaded:', instructorCourses.length, 'courses');
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to fetch courses:', errorData);
-        alert('Failed to fetch courses. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-      alert('Error fetching courses. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [searchParams, router, fetchCourses]);
 
   const deleteCourse = async (courseId: string) => {
     if (!confirm('Are you sure you want to delete this course? This action cannot be undone.')) {

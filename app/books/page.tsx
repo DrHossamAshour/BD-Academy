@@ -302,7 +302,7 @@ export default function BooksPage() {
 
                     {/* Features */}
                     <div className="mb-6">
-                      <h4 className="font-semibold text-gray-800 mb-3">What's Included:</h4>
+                      <h4 className="font-semibold text-gray-800 mb-3">What&apos;s Included:</h4>
                       <ul className="space-y-1">
                         {book.features.slice(0, 3).map((feature, index) => (
                           <li key={index} className="flex items-center space-x-2 text-sm text-gray-600">

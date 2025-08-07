@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Upload, X, Image as ImageIcon, AlertCircle, CheckCircle } from 'lucide-react';
 
@@ -100,7 +101,7 @@ export default function ImageUpload({
 
     // Upload file
     uploadImage(file);
-  }, []);
+  }, [uploadImage, validateFile]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -143,10 +144,11 @@ export default function ImageUpload({
       {preview && (
         <div className="relative">
           <div className={`${getAspectRatioClass()} relative overflow-hidden rounded-lg border border-gray-200`}>
-            <img
+            <Image
               src={preview}
               alt="Course preview"
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
             />
             <Button
               type="button"

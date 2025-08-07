@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,33 @@ export default function InstructorDashboard() {
     courseRating: 0
   });
 
+  const loadDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/courses/debug');
+      if (response.ok) {
+        const data = await response.json();
+        setCourses(data.data || []);
+        
+        // Calculate basic stats
+        const courseCount = data.data?.length || 0;
+        const publishedCount = data.data?.filter((course: any) => course.isPublished)?.length || 0;
+        const totalStudents = data.data?.reduce((sum: number, course: any) => sum + (course.students || 0), 0) || 0;
+        
+        setStats(prevStats => ({
+          ...prevStats,
+          totalCourses: courseCount,
+          publishedCourses: publishedCount,
+          totalStudents: totalStudents
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (status === "loading") return;
 
@@ -49,41 +76,7 @@ export default function InstructorDashboard() {
     }
 
     loadDashboardData();
-  }, [session, status, router]);
-
-  const loadDashboardData = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/courses/debug');
-      if (response.ok) {
-        const data = await response.json();
-        const instructorCourses = data.data?.filter((course: any) => 
-          course.instructorId === session?.user?.id
-        ) || [];
-        
-        setCourses(instructorCourses);
-        
-        // Calculate stats
-        const totalStudents = instructorCourses.reduce((sum: number, course: any) => sum + (course.students || 0), 0);
-        const activeCourses = instructorCourses.filter((course: any) => course.status === 'published').length;
-        const monthlyEarnings = instructorCourses.reduce((sum: number, course: any) => sum + (course.revenue || 0), 0);
-        const courseRating = instructorCourses.length > 0 
-          ? instructorCourses.reduce((sum: number, course: any) => sum + (course.rating || 0), 0) / instructorCourses.length 
-          : 0;
-
-        setStats({
-          totalStudents,
-          activeCourses,
-          monthlyEarnings,
-          courseRating: Math.round(courseRating * 10) / 10
-        });
-      }
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [session, status, router, loadDashboardData]);
 
   if (status === "loading" || loading) {
     return (
