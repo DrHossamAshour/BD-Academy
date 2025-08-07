@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { orderDB } from '@/lib/database';
+
+const createOrderSchema = z.object({
+  userId: z.string().min(1, 'User ID is required'),
+  courseId: z.string().min(1, 'Course ID is required'),
+  amount: z.number().min(0, 'Amount must be positive'),
+  currency: z.string().optional().default('USD'),
+  status: z.enum(['pending', 'completed', 'cancelled', 'failed']).optional().default('pending'),
+  customerInfo: z.object({
+    name: z.string().optional(),
+    email: z.string().email().optional(),
+  }).optional(),
+});
 
 // GET - Fetch all orders (admin only)
 export async function GET(request: NextRequest) {
@@ -49,8 +62,18 @@ export async function POST(request: NextRequest) {
 
     const orderData = await request.json();
 
-    // Validate required fields
-    if (!orderData.userId || !orderData.courseId || !orderData.amount) {
+    // Validate input
+    const result = createOrderSchema.safeParse(orderData);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: result.error.issues },
+        { status: 400 }
+      );
+    }
+
+    // Validate required fields (additional check)
+    if (!result.data.userId || !result.data.courseId || result.data.amount === undefined) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -58,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new order
-    const newOrder = await orderDB.createOrder(orderData);
+    const newOrder = await orderDB.createOrder(result.data);
 
     return NextResponse.json({
       success: true,

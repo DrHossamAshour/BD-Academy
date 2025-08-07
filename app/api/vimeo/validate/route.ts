@@ -1,17 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 
 const VIMEO_TOKEN = "be9a99823ebe2f7b7212d33ce3594e74";
 
+const vimeoValidationSchema = z.object({
+  videoUrl: z.string().url('Invalid URL format').refine(
+    (url) => url.includes('player.vimeo.com/video/'),
+    'Must be a valid Vimeo player URL'
+  ),
+});
+
 export async function POST(request: NextRequest) {
   try {
-    const { videoUrl } = await request.json();
-
-    if (!videoUrl) {
+    const body = await request.json();
+    
+    // Validate input
+    const result = vimeoValidationSchema.safeParse(body);
+    
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Video URL is required' },
+        { error: 'Invalid input', details: result.error.issues },
         { status: 400 }
       );
     }
+
+    const { videoUrl } = result.data;
 
     // Extract video ID from Vimeo URL
     const vimeoRegex = /https:\/\/player\.vimeo\.com\/video\/(\d+)\?.*/;

@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { userDB } from '@/lib/database';
+
+const createUserSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name too long'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.enum(['student', 'instructor', 'admin']).optional().default('student'),
+  phone: z.string().optional(),
+  bio: z.string().max(500, 'Bio too long').optional(),
+});
 
 // GET - Fetch all users (admin only)
 export async function GET(request: NextRequest) {
@@ -49,8 +59,18 @@ export async function POST(request: NextRequest) {
 
     const userData = await request.json();
 
-    // Validate required fields
-    if (!userData.name || !userData.email || !userData.password) {
+    // Validate input
+    const result = createUserSchema.safeParse(userData);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: result.error.issues },
+        { status: 400 }
+      );
+    }
+
+    // Validate required fields (additional check)
+    if (!result.data.name || !result.data.email || !result.data.password) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -58,7 +78,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = await userDB.getUserByEmail(userData.email);
+    const existingUser = await userDB.getUserByEmail(result.data.email);
     if (existingUser) {
       return NextResponse.json(
         { error: 'User already exists with this email' },
@@ -67,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new user
-    const newUser = await userDB.createUser(userData);
+    const newUser = await userDB.createUser(result.data);
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = newUser.toObject();

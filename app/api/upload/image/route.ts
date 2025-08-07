@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
@@ -9,6 +10,14 @@ import path from 'path';
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'courses');
+
+const uploadFileSchema = z.object({
+  maxSize: z.number().max(MAX_FILE_SIZE, `File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`),
+  type: z.enum(['image/jpeg', 'image/jpg', 'image/png']).refine(
+    (type) => ALLOWED_TYPES.includes(type),
+    { message: 'Invalid file type. Only JPG and PNG files are allowed.' }
+  ),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,14 +39,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No image file provided' }, { status: 400 });
     }
 
-    // Validate file type
+    // Validate file using schema
+    const validationResult = uploadFileSchema.safeParse({
+      maxSize: file.size,
+      type: file.type as any,
+    });
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'File validation failed', details: validationResult.error.issues },
+        { status: 400 }
+      );
+    }
+
+    // Additional validation (keeping existing checks for backward compatibility)
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json({ 
         error: 'Invalid file type. Only JPG and PNG files are allowed.' 
       }, { status: 400 });
     }
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json({ 
         error: `File size too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB` 
