@@ -43,10 +43,10 @@ const stats = [
 
 export default function StatsSection() {
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-16 bg-gray-50" aria-labelledby="stats-heading">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">
+          <h2 id="stats-heading" className="text-3xl font-bold text-gray-800 mb-4">
             Why Choose BigDentist?
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
@@ -54,15 +54,17 @@ export default function StatsSection() {
           </p>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8" role="list" aria-label="Platform statistics">
           {stats.map((stat, index) => {
             const IconComponent = stat.icon;
             return (
-              <div key={index} className="text-center">
-                <div className={`w-16 h-16 ${stat.color} rounded-full flex items-center justify-center mx-auto mb-4`}>
+              <div key={index} className="text-center" role="listitem">
+                <div className={`w-16 h-16 ${stat.color} rounded-full flex items-center justify-center mx-auto mb-4`} aria-hidden="true">
                   <IconComponent className="w-8 h-8 text-white" />
                 </div>
-                <div className="text-2xl font-bold text-gray-800 mb-2">{stat.number}</div>
+                <div className="text-2xl font-bold text-gray-800 mb-2" aria-label={`${stat.number} ${stat.label}`}>
+                  {stat.number}
+                </div>
                 <div className="text-gray-600 text-sm">{stat.label}</div>
               </div>
             );

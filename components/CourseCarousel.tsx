@@ -156,8 +156,9 @@ export default function CourseCarousel() {
   const showArrows = courses.length > cardsPerView;
 
   return (
-    <section className="py-8 bg-gray-50">
+    <section className="py-8 bg-gray-50" aria-labelledby="featured-courses-heading">
       <div className="container mx-auto px-4">
+        <h2 id="featured-courses-heading" className="sr-only">Featured Courses</h2>
         <div className="relative">
           {/* Navigation Arrows - Only show if there are more courses than cards per view */}
           {showArrows && (
@@ -167,22 +168,24 @@ export default function CourseCarousel() {
                 size="icon"
                 className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg hover:bg-gray-50"
                 onClick={prevSlide}
+                aria-label="Previous course"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
                 className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg hover:bg-gray-50"
                 onClick={nextSlide}
+                aria-label="Next course"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </Button>
             </>
           )}
 
           {/* Course Cards */}
-          <div className={`overflow-hidden ${showArrows ? 'mx-12' : 'mx-0'}`}>
+          <div className={`overflow-hidden ${showArrows ? 'mx-12' : 'mx-0'}`} role="region" aria-live="polite">
             <div 
               ref={carouselRef}
               className="flex transition-transform duration-700 ease-in-out"
