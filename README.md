@@ -25,9 +25,9 @@ A comprehensive dental education platform built with Next.js 14, MongoDB, NextAu
 ## 📋 Prerequisites
 
 - Node.js 18+ 
-- MongoDB database (local or cloud)
-- Stripe account with API keys
-- Vimeo account with access token
+- MongoDB Atlas account or local MongoDB instance
+- Stripe account with API keys (for payments)
+- Vimeo account with access token (for video content)
 
 ## 🔧 Installation
 
@@ -44,26 +44,28 @@ A comprehensive dental education platform built with Next.js 14, MongoDB, NextAu
 
 3. **Set up environment variables**
    ```bash
-   cp .env.example .env
+   cp .env.example .env.local
    ```
    
-   Fill in your environment variables:
+   Fill in your environment variables in `.env.local`:
    ```env
-   # Database
-   MONGODB_URI=mongodb://localhost:27017/bigdentist
+   # MongoDB Atlas (recommended) or local MongoDB
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/bigdentist?retryWrites=true&w=majority
    
-   # NextAuth
+   # NextAuth (generate secret with: openssl rand -base64 32)
    NEXTAUTH_URL=http://localhost:3000
-   NEXTAUTH_SECRET=your-nextauth-secret-here
+   NEXTAUTH_SECRET=your-secure-nextauth-secret-here
    
-   # Stripe
+   # Stripe (optional - for payments)
    STRIPE_PUBLISHABLE_KEY=pk_test_...
    STRIPE_SECRET_KEY=sk_test_...
    STRIPE_WEBHOOK_SECRET=whsec_...
    
-   # Vimeo
+   # Vimeo (optional - for video content)
    VIMEO_ACCESS_TOKEN=your-vimeo-access-token
    ```
+
+   **📚 For detailed MongoDB Atlas setup with IP whitelisting, see [MONGODB_SETUP.md](MONGODB_SETUP.md)**
 
 4. **Start the development server**
    ```bash
@@ -190,6 +192,36 @@ npm run build
 # Start production server
 npm start
 ```
+
+## 🔧 Troubleshooting
+
+### MongoDB Connection Issues
+
+If you see MongoDB connection errors:
+
+1. **Check environment variables**: Ensure `MONGODB_URI` is correctly set in `.env.local`
+2. **Verify MongoDB Atlas setup**: See [MONGODB_SETUP.md](MONGODB_SETUP.md) for detailed instructions
+3. **IP Whitelist**: Make sure your IP address is whitelisted in MongoDB Atlas
+4. **Credentials**: Verify username and password are correct in the connection string
+
+Common error messages:
+- `querySrv ETIMEOUT`: DNS/network issue, check your internet connection
+- `Authentication failed`: Wrong username/password in connection string  
+- `IP not whitelisted`: Add your IP to MongoDB Atlas Network Access
+
+### Build Issues
+
+If the build fails:
+- Run `npm install` to ensure all dependencies are installed
+- Check that Node.js version is 18 or higher
+- Verify environment variables are properly set
+
+### Development Server Issues
+
+If `npm run dev` doesn't start:
+- Ensure port 3000 is available
+- Check for any syntax errors in your code
+- Clear Next.js cache: `rm -rf .next`
 
 ## 🤝 Contributing
 
