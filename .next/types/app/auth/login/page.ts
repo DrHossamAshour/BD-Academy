@@ -1,4 +1,4 @@
-// File: C:\Users\Hisham\Downloads\BigDentist\app\auth\login\page.tsx
+// File: /home/runner/work/BD-Academy/BD-Academy/app/auth/login/page.tsx
 import * as entry from '../../../../../app/auth/login/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
