@@ -2,23 +2,13 @@
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import CourseCard from "@/components/ui/CourseCard";
 import {
   Search,
-  Star,
-  Filter,
-  Clock,
-  Users,
   Award,
-  Play,
-  Lock,
-  Globe
 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 
@@ -29,6 +19,8 @@ export default function CoursesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const coursesPerPage = 12; // Pagination for better performance
 
   // Fallback mock data when database connection fails
   const fallbackCourses = [
@@ -40,6 +32,7 @@ export default function CoursesPage() {
       instructor: 'Dr. Sarah Johnson',
       price: 99,
       rating: 4.8,
+      reviews: 150,
       students: 1250,
       category: 'Anatomy',
       level: 'Beginner'
@@ -52,6 +45,7 @@ export default function CoursesPage() {
       instructor: 'Dr. Michael Chen',
       price: 149,
       rating: 4.9,
+      reviews: 89,
       students: 890,
       category: 'Restorative',
       level: 'Advanced'
@@ -64,18 +58,23 @@ export default function CoursesPage() {
       instructor: 'Dr. Emily Rodriguez',
       price: 129,
       rating: 4.7,
+      reviews: 110,
       students: 1100,
       category: 'Orthodontics',
       level: 'Beginner'
     }
   ];
 
-  // Fetch courses from database
+  // Fetch courses from database with caching
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/courses/public');
+        const response = await fetch('/api/courses/public', {
+          headers: {
+            'Cache-Control': 'max-age=300' // 5 minutes cache
+          }
+        });
         if (response.ok) {
           const data = await response.json();
           setCourses(data.data || []);
@@ -103,6 +102,11 @@ export default function CoursesPage() {
     return matchesSearch && matchesCategory && matchesLevel;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
+  const startIndex = (currentPage - 1) * coursesPerPage;
+  const paginatedCourses = filteredCourses.slice(startIndex, startIndex + coursesPerPage);
+
   const categories = courses
     .map(course => course.category)
     .filter((category, index, arr) => arr.indexOf(category) === index);
@@ -112,12 +116,10 @@ export default function CoursesPage() {
 
   const handleEnrollClick = (courseId: string) => {
     if (!session?.user) {
-      // Store the intended course in sessionStorage and redirect to login
       sessionStorage.setItem('redirectAfterLogin', `/courses/${courseId}`);
       window.location.href = '/auth/login';
       return;
     }
-    // If user is logged in, redirect to checkout
     window.location.href = `/checkout?courseId=${courseId}`;
   };
 
@@ -168,7 +170,10 @@ export default function CoursesPage() {
                   <Input
                     placeholder="Search courses by title or description..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1); // Reset to first page on search
+                    }}
                     className="pl-10"
                   />
                 </div>
@@ -176,7 +181,10 @@ export default function CoursesPage() {
               <div className="flex gap-4">
                 <select
                   value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  onChange={(e) => {
+                    setCategoryFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#d8bf78]"
                 >
                   <option value="all">All Categories</option>
@@ -186,7 +194,10 @@ export default function CoursesPage() {
                 </select>
                 <select
                   value={levelFilter}
-                  onChange={(e) => setLevelFilter(e.target.value)}
+                  onChange={(e) => {
+                    setLevelFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#d8bf78]"
                 >
                   <option value="all">All Levels</option>
@@ -215,90 +226,51 @@ export default function CoursesPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCourses.map((course) => (
-                <Card key={course._id} className="hover:shadow-lg transition-shadow">
-                  <div className="relative">
-                    <div className="aspect-video relative overflow-hidden rounded-t-lg">
-                      <Image
-                        src={course.image}
-                        alt={course.title}
-                        fill
-                        className="object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "https://ext.same-assets.com/1352620099/2409258185.webp";
-                        }}
-                        unoptimized={course.image?.startsWith('/uploads/')}
-                      />
-                      <div className="absolute top-2 right-2">
-                        <Badge className="bg-[#d8bf78] text-white">
-                          {course.duration}
-                        </Badge>
-                      </div>
-                      {course.isFeatured && (
-                        <div className="absolute top-2 left-2">
-                          <Badge className="bg-red-500 text-white">Featured</Badge>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg text-gray-900 mb-1 line-clamp-2">
-                          {course.title}
-                        </h3>
-                        <p className="text-sm text-gray-600 line-clamp-2 mb-2">
-                          {course.description}
-                        </p>
-                        <div className="flex items-center text-sm text-gray-500 mb-2">
-                          <span className="font-medium">{course.instructor}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 mb-3">
-                      <Badge variant="outline" className="text-xs">
-                        {course.category}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {course.level}
-                      </Badge>
-                    </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginatedCourses.map((course, index) => (
+                  <CourseCard
+                    key={course._id}
+                    course={course}
+                    onViewCourse={handleViewCourse}
+                    onStartLearning={handleStartLearning}
+                    priority={index < 3} // Priority load for first 3 images
+                  />
+                ))}
+              </div>
 
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 text-yellow-500 fill-current mr-1" />
-                        <span className="text-sm font-medium">{course.rating}</span>
-                        <span className="text-xs text-gray-500 ml-1">({course.reviews} reviews)</span>
-                      </div>
-                      <div className="text-lg font-bold text-[#d8bf78]">
-                        ${course.price}
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={() => handleViewCourse(course._id)}
-                      >
-                        <Globe className="w-4 h-4 mr-2" />
-                        View Course
-                      </Button>
-                      <Button 
-                        className="flex-1 bg-[#d8bf78] hover:bg-[#c4a86a] text-white"
-                        onClick={() => handleStartLearning(course._id)}
-                      >
-                        <Play className="w-4 h-4 mr-2" />
-                        {session?.user ? 'Start Learning' : 'Login to Learn'}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-8 space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      onClick={() => setCurrentPage(page)}
+                      className={currentPage === page ? "bg-[#d8bf78] hover:bg-[#c4a86a]" : ""}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

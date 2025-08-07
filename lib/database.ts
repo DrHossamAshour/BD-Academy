@@ -2,17 +2,29 @@ import dbConnect from './db';
 import Course from './models/Course';
 import User from './models/User';
 import Order from './models/Order';
+import cache, { CACHE_KEYS, CACHE_TTL } from './cache';
 
 // Course Database Operations
 export const courseDB = {
   // Get all courses for an instructor
   async getInstructorCourses(instructorId: string) {
+    const cacheKey = CACHE_KEYS.INSTRUCTOR_COURSES(instructorId);
+    const cached = cache.get(cacheKey);
+    
+    if (cached) {
+      console.log('Cache hit for instructor courses:', instructorId);
+      return cached;
+    }
+
     try {
       await dbConnect();
       console.log('Getting courses for instructor:', instructorId);
       
       const courses = await Course.find({ instructorId }).sort({ createdAt: -1 });
       console.log('Found courses for instructor:', courses.length);
+      
+      // Cache for 5 minutes
+      cache.set(cacheKey, courses, CACHE_TTL.MEDIUM);
       
       return courses;
     } catch (error) {
@@ -23,12 +35,23 @@ export const courseDB = {
 
   // Get all courses (for admin)
   async getAllCourses() {
+    const cacheKey = CACHE_KEYS.COURSES_PUBLIC;
+    const cached = cache.get(cacheKey);
+    
+    if (cached) {
+      console.log('Cache hit for all courses');
+      return cached;
+    }
+
     try {
       await dbConnect();
       console.log('Getting all courses from MongoDB');
       
       const courses = await Course.find({}).sort({ createdAt: -1 });
       console.log('Total courses in MongoDB:', courses.length);
+      
+      // Cache for 5 minutes
+      cache.set(cacheKey, courses, CACHE_TTL.MEDIUM);
       
       return courses;
     } catch (error) {
@@ -39,9 +62,23 @@ export const courseDB = {
 
   // Get a single course by ID
   async getCourseById(id: string) {
+    const cacheKey = CACHE_KEYS.COURSE_BY_ID(id);
+    const cached = cache.get(cacheKey);
+    
+    if (cached) {
+      console.log('Cache hit for course:', id);
+      return cached;
+    }
+
     try {
       await dbConnect();
       const course = await Course.findById(id);
+      
+      if (course) {
+        // Cache for 30 minutes
+        cache.set(cacheKey, course, CACHE_TTL.LONG);
+      }
+      
       return course;
     } catch (error) {
       console.error('Error getting course by ID:', error);
@@ -61,6 +98,10 @@ export const courseDB = {
 
       const savedCourse = await newCourse.save();
       console.log('Course created in MongoDB:', savedCourse._id);
+      
+      // Invalidate relevant caches
+      cache.delete(CACHE_KEYS.COURSES_PUBLIC);
+      cache.delete(CACHE_KEYS.INSTRUCTOR_COURSES(courseData.instructorId));
       
       return savedCourse;
     } catch (error) {
@@ -87,6 +128,12 @@ export const courseDB = {
 
       if (updatedCourse) {
         console.log('Course updated in MongoDB:', id);
+        
+        // Invalidate relevant caches
+        cache.delete(CACHE_KEYS.COURSE_BY_ID(id));
+        cache.delete(CACHE_KEYS.COURSES_PUBLIC);
+        cache.delete(CACHE_KEYS.INSTRUCTOR_COURSES(updatedCourse.instructorId));
+        
         return updatedCourse;
       }
       
@@ -101,10 +148,19 @@ export const courseDB = {
   async deleteCourse(id: string) {
     try {
       await dbConnect();
+      const course = await Course.findById(id);
       const result = await Course.findByIdAndDelete(id);
       
       if (result) {
         console.log('Course deleted from MongoDB:', id);
+        
+        // Invalidate relevant caches
+        cache.delete(CACHE_KEYS.COURSE_BY_ID(id));
+        cache.delete(CACHE_KEYS.COURSES_PUBLIC);
+        if (course?.instructorId) {
+          cache.delete(CACHE_KEYS.INSTRUCTOR_COURSES(course.instructorId));
+        }
+        
         return true;
       }
       
@@ -117,13 +173,21 @@ export const courseDB = {
 
   // Get course statistics
   async getStats(instructorId?: string) {
+    const cacheKey = CACHE_KEYS.COURSE_STATS(instructorId);
+    const cached = cache.get(cacheKey);
+    
+    if (cached) {
+      console.log('Cache hit for course stats');
+      return cached;
+    }
+
     try {
       await dbConnect();
       
       const filter = instructorId ? { instructorId } : {};
       const courses = await Course.find(filter);
 
-      return {
+      const stats = {
         totalCourses: courses.length,
         publishedCourses: courses.filter(course => course.status === 'published').length,
         draftCourses: courses.filter(course => course.status === 'draft').length,
@@ -133,6 +197,11 @@ export const courseDB = {
           ? courses.reduce((sum, course) => sum + course.rating, 0) / courses.length 
           : 0
       };
+      
+      // Cache for 10 minutes
+      cache.set(cacheKey, stats, CACHE_TTL.MEDIUM * 2);
+      
+      return stats;
     } catch (error) {
       console.error('Error getting stats:', error);
       return {
@@ -173,9 +242,23 @@ export const courseDB = {
 export const userDB = {
   // Get user by ID
   async getUserById(id: string) {
+    const cacheKey = CACHE_KEYS.USER_BY_ID(id);
+    const cached = cache.get(cacheKey);
+    
+    if (cached) {
+      console.log('Cache hit for user:', id);
+      return cached;
+    }
+
     try {
       await dbConnect();
       const user = await User.findById(id).select('-password');
+      
+      if (user) {
+        // Cache for 30 minutes
+        cache.set(cacheKey, user, CACHE_TTL.LONG);
+      }
+      
       return user;
     } catch (error) {
       console.error('Error getting user by ID:', error);
@@ -185,9 +268,23 @@ export const userDB = {
 
   // Get user by email
   async getUserByEmail(email: string) {
+    const cacheKey = CACHE_KEYS.USER_BY_EMAIL(email);
+    const cached = cache.get(cacheKey);
+    
+    if (cached) {
+      console.log('Cache hit for user email:', email);
+      return cached;
+    }
+
     try {
       await dbConnect();
       const user = await User.findOne({ email });
+      
+      if (user) {
+        // Cache for 30 minutes
+        cache.set(cacheKey, user, CACHE_TTL.LONG);
+      }
+      
       return user;
     } catch (error) {
       console.error('Error getting user by email:', error);
@@ -201,6 +298,10 @@ export const userDB = {
       await dbConnect();
       const user = new User(userData);
       const savedUser = await user.save();
+      
+      // Invalidate user stats cache
+      cache.delete(CACHE_KEYS.USER_STATS);
+      
       return savedUser;
     } catch (error) {
       console.error('Error creating user:', error);
@@ -213,6 +314,13 @@ export const userDB = {
     try {
       await dbConnect();
       const user = await User.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+      
+      if (user) {
+        // Invalidate relevant caches
+        cache.delete(CACHE_KEYS.USER_BY_ID(id));
+        cache.delete(CACHE_KEYS.USER_BY_EMAIL(user.email));
+      }
+      
       return user;
     } catch (error) {
       console.error('Error updating user:', error);

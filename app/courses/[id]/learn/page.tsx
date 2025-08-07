@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import VimeoPlayer from "@/components/video/VimeoPlayer";
 import {
   Play,
   Lock,
@@ -19,7 +20,13 @@ import {
   Award,
   Star
 } from "lucide-react";
-import Image from "next/image";
+
+// Helper function to extract Vimeo ID from URL
+const extractVimeoId = (url: string): string => {
+  if (!url) return '';
+  const match = url.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/);
+  return match ? match[1] : '';
+};
 
 export default function CourseLearnPage({ params }: { params: { id: string } }) {
   const { data: session } = useSession();
@@ -222,12 +229,11 @@ export default function CourseLearnPage({ params }: { params: { id: string } }) 
               <div className="bg-black rounded-lg overflow-hidden">
                 <div className="aspect-video relative">
                   {currentLesson.vimeoUrl || currentLesson.videoUrl ? (
-                    <iframe
-                      src={currentLesson.vimeoUrl || currentLesson.videoUrl}
+                    <VimeoPlayer
+                      videoId={currentLesson.vimeoId || extractVimeoId(currentLesson.vimeoUrl || currentLesson.videoUrl)}
+                      title={currentLesson.title}
                       className="w-full h-full"
-                      frameBorder="0"
-                      allow="autoplay; fullscreen; picture-in-picture"
-                      allowFullScreen
+                      lazy={true}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">

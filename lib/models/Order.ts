@@ -52,5 +52,8 @@ const OrderSchema = new mongoose.Schema({
 // Index for user orders
 OrderSchema.index({ userId: 1, status: 1 });
 OrderSchema.index({ paymentIntentId: 1 });
+OrderSchema.index({ courseId: 1, status: 1 });
+OrderSchema.index({ status: 1, createdAt: -1 });
+OrderSchema.index({ userId: 1, courseId: 1 }, { unique: true }); // Prevent duplicate orders
 
 export default mongoose.models.Order || mongoose.model('Order', OrderSchema);

@@ -50,5 +50,7 @@ const LessonSchema = new mongoose.Schema({
 
 // Index for course lessons ordering
 LessonSchema.index({ courseId: 1, order: 1 });
+LessonSchema.index({ courseId: 1, isPublished: 1 });
+LessonSchema.index({ isPreview: 1, courseId: 1 });
 
 export default mongoose.models.Lesson || mongoose.model('Lesson', LessonSchema);

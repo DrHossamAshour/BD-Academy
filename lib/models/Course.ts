@@ -152,6 +152,12 @@ const CourseSchema = new mongoose.Schema({
 CourseSchema.index({ instructorId: 1, status: 1 });
 CourseSchema.index({ category: 1, status: 1 });
 CourseSchema.index({ isFeatured: 1, status: 1 });
+CourseSchema.index({ featured: 1, status: 1 });
 CourseSchema.index({ title: 'text', description: 'text' });
+CourseSchema.index({ price: 1, status: 1 });
+CourseSchema.index({ rating: -1, status: 1 });
+CourseSchema.index({ students: -1, status: 1 });
+CourseSchema.index({ createdAt: -1, status: 1 });
+CourseSchema.index({ level: 1, category: 1, status: 1 }); // Compound index for filtering
 
 export default mongoose.models.Course || mongoose.model('Course', CourseSchema);

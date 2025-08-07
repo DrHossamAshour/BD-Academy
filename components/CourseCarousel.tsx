@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
-import Link from "next/link";
+import OptimizedImage from "@/components/ui/OptimizedImage";
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
 
@@ -65,7 +65,11 @@ export default function CourseCarousel() {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await fetch('/api/courses/public');
+        const response = await fetch('/api/courses/public', {
+          headers: {
+            'Cache-Control': 'max-age=300' // 5 minutes cache
+          }
+        });
         if (response.ok) {
           const data = await response.json();
           setCourses(data);
@@ -84,12 +88,12 @@ export default function CourseCarousel() {
     fetchCourses();
   }, []);
 
-  // Auto-scroll functionality
+  // Auto-scroll functionality with cleanup
   useEffect(() => {
-    if (courses.length > 0) {
+    if (courses.length > 1) {
       intervalRef.current = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % courses.length);
-      }, 4000); // Change slide every 4 seconds
+      }, 4000);
 
       return () => {
         if (intervalRef.current) {
@@ -101,7 +105,6 @@ export default function CourseCarousel() {
 
   const nextSlide = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % courses.length);
-    // Reset auto-scroll timer
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
@@ -109,7 +112,6 @@ export default function CourseCarousel() {
 
   const prevSlide = () => {
     setCurrentIndex((prevIndex) => (prevIndex - 1 + courses.length) % courses.length);
-    // Reset auto-scroll timer
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
@@ -146,10 +148,9 @@ export default function CourseCarousel() {
   }
 
   if (courses.length === 0) {
-    return null; // Don't show carousel if no courses
+    return null;
   }
 
-  // Determine display configuration based on course count
   const isManyCourses = courses.length > 8;
   const cardsPerView = isManyCourses ? 3 : 1;
   const cardWidth = isManyCourses ? 'w-1/3' : 'w-full';
@@ -159,7 +160,6 @@ export default function CourseCarousel() {
     <section className="py-8 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="relative">
-          {/* Navigation Arrows - Only show if there are more courses than cards per view */}
           {showArrows && (
             <>
               <Button
@@ -167,6 +167,7 @@ export default function CourseCarousel() {
                 size="icon"
                 className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg hover:bg-gray-50"
                 onClick={prevSlide}
+                aria-label="Previous courses"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -175,13 +176,13 @@ export default function CourseCarousel() {
                 size="icon"
                 className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg hover:bg-gray-50"
                 onClick={nextSlide}
+                aria-label="Next courses"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </>
           )}
 
-          {/* Course Cards */}
           <div className={`overflow-hidden ${showArrows ? 'mx-12' : 'mx-0'}`}>
             <div 
               ref={carouselRef}
@@ -195,14 +196,12 @@ export default function CourseCarousel() {
                 <div key={course._id} className={`flex-shrink-0 ${cardWidth} px-3`}>
                   <Card className="bg-gradient-to-r from-[#c4a86a] to-[#b39a5c] text-white relative overflow-hidden h-full min-h-[500px]">
                     <div className="p-6 h-full flex flex-col">
-                      {/* Badge */}
                       {course.isFeatured && (
                         <Badge className="absolute top-4 right-4 bg-yellow-400 text-black font-bold">
                           FEATURED
                         </Badge>
                       )}
 
-                      {/* Content */}
                       <div className="space-y-4 flex-1 flex flex-col">
                         <div className="flex-1">
                           <h3 className="text-xl font-bold line-clamp-2 mb-3 leading-tight">{course.title}</h3>
@@ -241,7 +240,6 @@ export default function CourseCarousel() {
                       </div>
                     </div>
 
-                    {/* Background Pattern */}
                     <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full pointer-events-none"></div>
                     <div className="absolute -right-5 -bottom-5 w-20 h-20 bg-white/5 rounded-full pointer-events-none"></div>
                   </Card>
@@ -250,7 +248,6 @@ export default function CourseCarousel() {
             </div>
           </div>
 
-          {/* Dots Indicator - Only show if there are multiple courses */}
           {courses.length > 1 && (
             <div className="flex justify-center mt-6 space-x-2">
               {courses.map((_, index) => (
@@ -260,6 +257,7 @@ export default function CourseCarousel() {
                     index === currentIndex ? 'bg-[#d8bf78]' : 'bg-gray-300'
                   }`}
                   onClick={() => setCurrentIndex(index)}
+                  aria-label={`Go to slide ${index + 1}`}
                 />
               ))}
             </div>

@@ -36,8 +36,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Additional build artifacts
+.next/cache/
+.next/trace
+.next/server/
+.next/static/
+
+# tmp files
+/tmp
+
 # Uploaded files
 public/uploads/
-
-# Database files (no longer needed with MongoDB)
-# data/

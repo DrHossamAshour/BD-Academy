@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         currentUserId: session.user.id,
         currentUserRole: session.user.role,
         databaseState: dbState,
-        allCourses: allCourses.map(c => ({
+        allCourses: allCourses.map((c: any) => ({
           id: c._id?.toString(),
           title: c.title,
           instructorId: c.instructorId,

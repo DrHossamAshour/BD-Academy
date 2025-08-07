@@ -8,15 +8,21 @@ export async function GET(request: NextRequest) {
     
     // Get all courses and filter for published ones
     const allCourses = await courseDB.getAllCourses();
-    const publishedCourses = allCourses.filter(course => course.status === 'published');
+    const publishedCourses = allCourses.filter((course: any) => course.status === 'published');
     
     console.log('Published courses found:', publishedCourses.length);
     
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: publishedCourses,
       total: publishedCourses.length
     });
+
+    // Add cache headers
+    response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    response.headers.set('CDN-Cache-Control', 'public, s-maxage=600');
+    
+    return response;
   } catch (error) {
     console.error('Error fetching public courses:', error);
     return NextResponse.json(
