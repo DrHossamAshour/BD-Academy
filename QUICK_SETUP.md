@@ -2,6 +2,15 @@
 
 ## 🔧 **Step 1: Fix MongoDB Atlas IP Whitelist**
 
+### **🚨 Enhanced Error Detection**
+The application now provides detailed error messages for MongoDB Atlas connection issues, including:
+- IP whitelist problems
+- Authentication failures  
+- Connection timeouts
+- Invalid connection strings
+
+### **MongoDB Atlas Setup:**
+
 1. **Go to MongoDB Atlas Dashboard:**
    - Visit: https://cloud.mongodb.com
    - Sign in to your account
@@ -9,13 +18,17 @@
 2. **Navigate to Network Access:**
    - Select your cluster
    - Click **"Network Access"** in the left sidebar
-   - Click **"Add IP Address"**
 
-3. **Add Your IP:**
+3. **Add Your IP Address:**
    - Click **"Add IP Address"**
-   - Choose **"Allow Access from Anywhere"** (for development)
-   - OR add your specific IP address
+   - Option A: **"Add Current IP Address"** (recommended for production)
+   - Option B: **"Allow Access from Anywhere"** (`0.0.0.0/0`) - for development only
    - Click **"Confirm"**
+   - Wait 1-2 minutes for changes to apply
+
+4. **Verify IP Whitelist:**
+   - Your IP should appear in the list with status "Active"
+   - If using "Allow Access from Anywhere", you'll see `0.0.0.0/0` in the list
 
 ## 📝 **Step 2: Update Environment File**
 
@@ -76,10 +89,44 @@ After running the setup script, you can login with:
 
 ## 🆘 **If You Still Have Issues:**
 
+### **🔍 Enhanced Error Messages**
+The application now provides detailed error messages for MongoDB issues:
+
+1. **IP Whitelist Error:**
+   ```
+   🚨 MongoDB Atlas IP Whitelist Error:
+   Your IP address is not whitelisted in MongoDB Atlas.
+   ```
+   **Solution:** Follow Step 1 above to whitelist your IP
+
+2. **Connection Timeout:**
+   ```
+   🚨 MongoDB Connection Timeout:
+   Unable to connect to MongoDB Atlas.
+   ```
+   **Solution:** Check your internet connection and IP whitelist
+
+3. **Authentication Error:**
+   ```
+   🚨 MongoDB Authentication Error:
+   Invalid username or password for MongoDB Atlas.
+   ```
+   **Solution:** Verify your username/password in connection string
+
+4. **Connection String Error:**
+   ```
+   🚨 MongoDB Connection String Error:
+   Your MONGODB_URI format is invalid.
+   ```
+   **Solution:** Check your connection string format
+
 ### **MongoDB Connection Failed:**
-1. Double-check your connection string in `.env.local`
-2. Make sure your IP is whitelisted in MongoDB Atlas
-3. Verify your username/password are correct
+1. Look for the specific error message in your terminal
+2. Follow the detailed instructions provided in the error message
+3. Double-check your connection string in `.env.local`
+4. Make sure your IP is whitelisted in MongoDB Atlas
+5. Verify your username/password are correct
+6. Ensure your MongoDB cluster is running (not paused)
 
 ### **Login Still Fails:**
 1. Run the setup script again: `node scripts/setup-database.js`
