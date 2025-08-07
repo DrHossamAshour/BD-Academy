@@ -27,9 +27,15 @@ async function dbConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      // MongoDB Atlas recommended connection options
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      family: 4, // Use IPv4, skip trying IPv6
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      console.log('✅ Connected to MongoDB Atlas');
       return mongoose;
     });
   }
@@ -38,6 +44,11 @@ async function dbConnect() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
+    console.error('❌ MongoDB connection failed:', e);
+    console.error('Please check your MONGODB_URI and ensure:');
+    console.error('1. Your IP address is whitelisted in MongoDB Atlas');
+    console.error('2. Your credentials are correct');
+    console.error('3. Your cluster is running and accessible');
     throw e;
   }
 
