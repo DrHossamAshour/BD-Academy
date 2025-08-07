@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { courseDB } from '@/lib/database';
+import { sanitizeObject, sanitizeName, sanitizeDescription, withSecurity } from '@/lib/security';
 
 // GET - Fetch all courses for an instructor
-export async function GET(request: NextRequest) {
+async function getCoursesHandler(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - Create a new course
-export async function POST(request: NextRequest) {
+async function createCourseHandler(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -56,17 +57,35 @@ export async function POST(request: NextRequest) {
 
     const courseData = await request.json();
 
+    // Sanitize course data
+    const sanitizedCourseData = sanitizeObject(courseData, {
+      title: { stripHtml: true, stripScripts: true },
+      description: { 
+        allowedTags: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li'],
+        stripScripts: true
+      },
+      instructor: { stripHtml: true, stripScripts: true }
+    });
+
     // Validate required fields
-    if (!courseData.title || !courseData.description || !courseData.price) {
+    if (!sanitizedCourseData.title || !sanitizedCourseData.description || !sanitizedCourseData.price) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: title, description, price' },
+        { status: 400 }
+      );
+    }
+
+    // Additional validation
+    if (typeof sanitizedCourseData.price !== 'number' || sanitizedCourseData.price < 0) {
+      return NextResponse.json(
+        { error: 'Price must be a positive number' },
         { status: 400 }
       );
     }
 
     // Create new course using MongoDB
     const newCourse = await courseDB.createCourse({
-      ...courseData,
+      ...sanitizedCourseData,
       instructor: session.user.name,
       instructorId: session.user.id
     });
@@ -87,3 +106,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Apply security middleware
+export const GET = withSecurity(getCoursesHandler, { rateLimit: true });
+export const POST = withSecurity(createCourseHandler, { rateLimit: true });

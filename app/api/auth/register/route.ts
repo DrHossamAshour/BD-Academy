@@ -3,19 +3,27 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import dbConnect from '@/lib/db';
 import User from '@/lib/models/User';
+import { sanitizeEmail, sanitizeName, withSecurity } from '@/lib/security';
 
 const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name too long'),
+  email: z.string().email('Invalid email address').max(255, 'Email too long'),
+  password: z.string().min(8, 'Password must be at least 8 characters').max(128, 'Password too long'),
 });
 
-export async function POST(request: NextRequest) {
+async function registerHandler(request: NextRequest) {
   try {
     const body = await request.json();
     
+    // Sanitize input data
+    const sanitizedBody = {
+      name: sanitizeName(body.name || ''),
+      email: sanitizeEmail(body.email || ''),
+      password: body.password || '' // Don't sanitize password, just validate
+    };
+    
     // Validate input
-    const result = registerSchema.safeParse(body);
+    const result = registerSchema.safeParse(sanitizedBody);
     
     if (!result.success) {
       return NextResponse.json(
@@ -38,8 +46,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password
-    const saltRounds = 12;
+    // Hash password with stronger salt rounds
+    const saltRounds = 14; // Increased from 12 for better security
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create user
@@ -62,9 +70,23 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Registration error:', error);
+    
+    // Handle specific MongoDB errors
+    if (error instanceof Error) {
+      if (error.message.includes('E11000') || error.message.includes('duplicate key')) {
+        return NextResponse.json(
+          { error: 'User already exists with this email' },
+          { status: 409 }
+        );
+      }
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
+
+// Apply security middleware
+export const POST = withSecurity(registerHandler, { rateLimit: true });
