@@ -55,13 +55,13 @@ export default function Header() {
   const dashboardButton = getDashboardButton();
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-white shadow-sm border-b" role="banner">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-[#d8bf78] rounded-full flex items-center justify-center">
+            <Link href="/" className="flex items-center space-x-2" aria-label="BigDentist homepage">
+              <div className="w-10 h-10 bg-[#d8bf78] rounded-full flex items-center justify-center" aria-hidden="true">
                 <span className="text-white font-bold text-lg">B</span>
               </div>
               <div className="flex flex-col">
@@ -72,7 +72,7 @@ export default function Header() {
           </div>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-8" role="navigation" aria-label="Main navigation">
             <Link href="/books" className="text-gray-700 hover:text-[#d8bf78] transition-colors">
               Books & Resources
             </Link>
@@ -88,12 +88,12 @@ export default function Header() {
           </nav>
 
           {/* Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-3">
+          <div className="hidden md:flex items-center space-x-3" role="navigation" aria-label="User account">
             {!isClient || (status === "loading" && !showAuthButtons) ? (
               // Show loading state instead of hiding completely
-              <div className="flex items-center space-x-3">
-                <div className="w-20 h-9 bg-gray-200 rounded-md animate-pulse"></div>
-                <div className="w-16 h-9 bg-gray-200 rounded-md animate-pulse"></div>
+              <div className="flex items-center space-x-3" aria-label="Loading user authentication">
+                <div className="w-20 h-9 bg-gray-200 rounded-md animate-pulse" aria-hidden="true"></div>
+                <div className="w-16 h-9 bg-gray-200 rounded-md animate-pulse" aria-hidden="true"></div>
               </div>
             ) : session?.user ? (
               <>
@@ -101,8 +101,8 @@ export default function Header() {
                   className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white"
                   asChild
                 >
-                  <Link href={dashboardButton.href}>
-                    {dashboardButton.icon && <dashboardButton.icon className="w-4 h-4 mr-2" />}
+                  <Link href={dashboardButton.href} aria-label={`Go to ${dashboardButton.text}`}>
+                    {dashboardButton.icon && <dashboardButton.icon className="w-4 h-4 mr-2" aria-hidden="true" />}
                     {dashboardButton.text}
                   </Link>
                 </Button>
@@ -110,6 +110,7 @@ export default function Header() {
                   variant="outline"
                   className="text-gray-700 border-gray-300 hover:bg-gray-50"
                   onClick={handleLogout}
+                  aria-label="Logout from your account"
                 >
                   Logout
                 </Button>
@@ -132,15 +133,18 @@ export default function Header() {
             size="icon"
             className="md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-navigation"
           >
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
           </Button>
         </div>
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-gray-200">
-            <nav className="flex flex-col space-y-4 pt-4">
+          <div className="md:hidden mt-4 pb-4 border-t border-gray-200" id="mobile-navigation">
+            <nav className="flex flex-col space-y-4 pt-4" role="navigation" aria-label="Mobile navigation">
               <Link href="/books" className="text-gray-700 hover:text-[#d8bf78] transition-colors">
                 Books & Resources
               </Link>
@@ -153,12 +157,12 @@ export default function Header() {
               <Link href="/courses?filter=monthly" className="text-gray-700 hover:text-[#d8bf78] transition-colors">
                 Monthly Courses
               </Link>
-              <div className="flex flex-col space-y-2 pt-4">
+              <div className="flex flex-col space-y-2 pt-4" role="navigation" aria-label="Mobile user account">
                 {!isClient || (status === "loading" && !showAuthButtons) ? (
                   // Show loading state for mobile menu
-                  <div className="flex flex-col space-y-2">
-                    <div className="w-full h-9 bg-gray-200 rounded-md animate-pulse"></div>
-                    <div className="w-full h-9 bg-gray-200 rounded-md animate-pulse"></div>
+                  <div className="flex flex-col space-y-2" aria-label="Loading user authentication">
+                    <div className="w-full h-9 bg-gray-200 rounded-md animate-pulse" aria-hidden="true"></div>
+                    <div className="w-full h-9 bg-gray-200 rounded-md animate-pulse" aria-hidden="true"></div>
                   </div>
                 ) : session?.user ? (
                   <>
@@ -166,8 +170,8 @@ export default function Header() {
                       className="bg-[#d8bf78] hover:bg-[#c4a86a] text-white"
                       asChild
                     >
-                      <Link href={dashboardButton.href}>
-                        {dashboardButton.icon && <dashboardButton.icon className="w-4 h-4 mr-2" />}
+                      <Link href={dashboardButton.href} aria-label={`Go to ${dashboardButton.text}`}>
+                        {dashboardButton.icon && <dashboardButton.icon className="w-4 h-4 mr-2" aria-hidden="true" />}
                         {dashboardButton.text}
                       </Link>
                     </Button>
@@ -178,6 +182,7 @@ export default function Header() {
                         handleLogout();
                         setIsMenuOpen(false);
                       }}
+                      aria-label="Logout from your account"
                     >
                       Logout
                     </Button>

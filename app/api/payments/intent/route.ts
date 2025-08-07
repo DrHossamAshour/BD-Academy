@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import Stripe from 'stripe';
 import dbConnect from '@/lib/db';
 import Course from '@/lib/models/Course';
 import Order from '@/lib/models/Order';
+
+const paymentIntentSchema = z.object({
+  courseId: z.string().min(1, 'Course ID is required'),
+  orderId: z.string().min(1, 'Order ID is required'),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,7 +36,18 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const body = await request.json();
-    const { courseId, orderId } = body;
+    
+    // Validate input
+    const result = paymentIntentSchema.safeParse(body);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: result.error.issues },
+        { status: 400 }
+      );
+    }
+    
+    const { courseId, orderId } = result.data;
 
     // Get course and order details
     const [course, order] = await Promise.all([

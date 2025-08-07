@@ -32,17 +32,30 @@ const categories = [
 
 export default function CategoryGrid() {
   return (
-    <section className="py-12 bg-white">
+    <section className="py-12 bg-white" aria-labelledby="categories-heading">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+        <h2 id="categories-heading" className="sr-only">Course Categories</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6" role="grid" aria-label="Course categories">
           {categories.map((category, index) => {
             const IconComponent = category.icon;
             return (
               <div
                 key={index}
                 className="flex flex-col items-center space-y-3 group cursor-pointer"
+                role="gridcell"
+                tabIndex={0}
+                aria-label={`Browse ${category.label} courses`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    // Handle category selection
+                  }
+                }}
               >
-                <div className={`w-16 h-16 rounded-full ${category.color} flex items-center justify-center group-hover:bg-[#d8bf78] transition-colors duration-300`}>
+                <div 
+                  className={`w-16 h-16 rounded-full ${category.color} flex items-center justify-center group-hover:bg-[#d8bf78] transition-colors duration-300`}
+                  aria-hidden="true"
+                >
                   <IconComponent className="w-8 h-8 text-white" />
                 </div>
                 <span className="text-sm text-center text-gray-700 group-hover:text-[#d8bf78] transition-colors duration-300 font-medium">

@@ -1,9 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import dbConnect from '@/lib/db';
 import Order from '@/lib/models/Order';
 import Course from '@/lib/models/Course';
 import User from '@/lib/models/User';
+
+const createOrderSchema = z.object({
+  courseId: z.string().min(1, 'Course ID is required'),
+  customerInfo: z.object({
+    name: z.string().min(1, 'Name is required'),
+    email: z.string().email('Invalid email'),
+    phone: z.string().optional(),
+  }),
+});
+
+const updateOrderSchema = z.object({
+  orderId: z.string().min(1, 'Order ID is required'),
+  paymentIntentId: z.string().min(1, 'Payment intent ID is required'),
+  status: z.enum(['pending', 'completed', 'cancelled', 'failed']),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,7 +72,18 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const body = await request.json();
-    const { courseId, customerInfo } = body;
+    
+    // Validate input
+    const result = createOrderSchema.safeParse(body);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: result.error.issues },
+        { status: 400 }
+      );
+    }
+    
+    const { courseId, customerInfo } = result.data;
 
     // Check if course exists
     const course = await Course.findById(courseId);
@@ -108,11 +135,21 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Complete order (called by payment webhook)
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { orderId, paymentIntentId, status } = body;
+    
+    // Validate input
+    const result = updateOrderSchema.safeParse(body);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: result.error.issues },
+        { status: 400 }
+      );
+    }
+    
+    const { orderId, paymentIntentId, status } = result.data;
 
     await dbConnect();
 

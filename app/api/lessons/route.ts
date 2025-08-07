@@ -1,9 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import dbConnect from '@/lib/db';
 import Lesson from '@/lib/models/Lesson';
 import Course from '@/lib/models/Course';
 import User from '@/lib/models/User';
+
+const createLessonSchema = z.object({
+  courseId: z.string().min(1, 'Course ID is required'),
+  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
+  description: z.string().optional(),
+  vimeoUrl: z.string().url('Invalid Vimeo URL').refine(
+    (url) => url.includes('vimeo.com'), 
+    'Must be a valid Vimeo URL'
+  ),
+  duration: z.number().min(0).optional(),
+  isPublished: z.boolean().default(false),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,7 +62,18 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const body = await request.json();
-    const { courseId, vimeoUrl, ...lessonData } = body;
+    
+    // Validate input
+    const result = createLessonSchema.safeParse(body);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: result.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const { courseId, vimeoUrl, ...lessonData } = result.data;
 
     // Check if course exists and user has permission
     const course = await Course.findById(courseId);

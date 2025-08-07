@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { courseDB } from '@/lib/database';
+
+const createCourseSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
+  description: z.string().min(1, 'Description is required').max(2000, 'Description too long'),
+  price: z.number().min(0, 'Price must be positive'),
+  currency: z.string().optional().default('USD'),
+  category: z.string().optional(),
+  level: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  duration: z.number().min(0).optional(),
+  image: z.string().url().optional(),
+  isPublished: z.boolean().default(false),
+});
 
 // GET - Fetch all courses for an instructor
 export async function GET(request: NextRequest) {
@@ -56,8 +69,18 @@ export async function POST(request: NextRequest) {
 
     const courseData = await request.json();
 
-    // Validate required fields
-    if (!courseData.title || !courseData.description || !courseData.price) {
+    // Validate input
+    const result = createCourseSchema.safeParse(courseData);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: result.error.issues },
+        { status: 400 }
+      );
+    }
+
+    // Validate required fields (additional check)
+    if (!result.data.title || !result.data.description || result.data.price === undefined) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -66,7 +89,7 @@ export async function POST(request: NextRequest) {
 
     // Create new course using MongoDB
     const newCourse = await courseDB.createCourse({
-      ...courseData,
+      ...result.data,
       instructor: session.user.name,
       instructorId: session.user.id
     });
