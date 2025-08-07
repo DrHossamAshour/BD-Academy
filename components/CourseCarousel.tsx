@@ -7,17 +7,19 @@ import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
+import { Course } from "@/types/course";
+import { CourseCarouselProps } from "@/types/components";
 
-export default function CourseCarousel() {
+export default function CourseCarousel({ title = "Featured Courses", subtitle, className }: CourseCarouselProps) {
   const { data: session } = useSession();
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<Partial<Course>[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fallback mock data when database connection fails
-  const fallbackCourses = [
+  const fallbackCourses: Partial<Course>[] = [
     {
       _id: '1',
       title: 'Dental Anatomy Fundamentals',
@@ -30,7 +32,8 @@ export default function CourseCarousel() {
       isFeatured: true,
       subtitle: 'Essential Knowledge',
       category: 'Anatomy',
-      originalPrice: 129
+      originalPrice: 129,
+      level: 'Beginner' as const
     },
     {
       _id: '2', 
@@ -232,7 +235,7 @@ export default function CourseCarousel() {
                           <Button 
                             variant="secondary" 
                             className="flex-1 bg-white text-[#c4a86a] hover:bg-gray-100 text-sm"
-                            onClick={() => handleStartLearning(course._id)}
+                            onClick={() => course._id && handleStartLearning(course._id)}
                           >
                             <Play className="w-4 h-4 mr-2" />
                             {session?.user ? 'Start Learning' : 'Login to Learn'}

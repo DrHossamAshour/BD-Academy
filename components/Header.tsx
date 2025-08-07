@@ -6,8 +6,23 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
+import { HeaderProps } from "@/types/components";
 
-export default function Header() {
+interface NavItem {
+  href: string;
+  label: string;
+  requiresAuth?: boolean;
+  roles?: string[];
+}
+
+const navItems: NavItem[] = [
+  { href: "/", label: "Home" },
+  { href: "/courses", label: "Courses" },
+  { href: "/books", label: "Books" },
+  { href: "/diplomas", label: "Diplomas" },
+];
+
+export default function Header({ className }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [showAuthButtons, setShowAuthButtons] = useState(false);
