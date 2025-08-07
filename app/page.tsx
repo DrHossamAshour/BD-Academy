@@ -32,8 +32,7 @@ export const metadata: Metadata = {
     description: 'Master dentistry with our comprehensive online courses. Learn from industry experts, get certified, and advance your dental career.',
     images: ['/images/og-image.jpg']
   },
-  robots: 'index, follow',
-  viewport: 'width=device-width, initial-scale=1'
+  robots: 'index, follow'
 };
 
 export default function Home() {

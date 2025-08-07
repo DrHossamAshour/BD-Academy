@@ -40,7 +40,16 @@ export default function CategoryGrid() {
             return (
               <div
                 key={index}
-                className="flex flex-col items-center space-y-3 group cursor-pointer"
+                className="flex flex-col items-center space-y-3 group cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#d8bf78] focus:ring-offset-2 rounded-lg p-2"
+                tabIndex={0}
+                role="button"
+                aria-label={`Browse ${category.label} courses`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    // Handle category selection
+                  }
+                }}
               >
                 <div className={`w-16 h-16 rounded-full ${category.color} flex items-center justify-center group-hover:bg-[#d8bf78] transition-colors duration-300`}>
                   <IconComponent className="w-8 h-8 text-white" />
