@@ -21,6 +21,7 @@ A comprehensive dental education platform built with Next.js 14, MongoDB, NextAu
 - **Video**: Vimeo Player API
 - **Authentication**: NextAuth.js with JWT sessions
 - **Validation**: Zod for type-safe input validation
+- **AI Assistance**: GitHub Copilot supported (see [COPILOT_GUIDE.md](./COPILOT_GUIDE.md))
 
 ## 📋 Prerequisites
 
@@ -177,6 +178,12 @@ Lessons support Vimeo video URLs in the format: `https://player.vimeo.com/video/
 - `student`: Default role, can enroll and view courses
 - `instructor`: Can create and manage courses
 - `admin`: Full system access
+
+### GitHub Copilot Integration
+This project is optimized for GitHub Copilot development. See [COPILOT_GUIDE.md](./COPILOT_GUIDE.md) for:
+- How GitHub Copilot works and setup instructions
+- Local file support (works without GitHub hosting)
+- Project-specific Copilot tips and best practices
 
 ## 🧪 Testing
 
