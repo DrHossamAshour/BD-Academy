@@ -77,17 +77,32 @@ After running the setup script, you can login with:
 ## 🆘 **If You Still Have Issues:**
 
 ### **MongoDB Connection Failed:**
-1. Double-check your connection string in `.env.local`
-2. Make sure your IP is whitelisted in MongoDB Atlas
-3. Verify your username/password are correct
+**Error message contains "IP whitelist", "not authorized", or "connection refused":**
+
+🔧 **Quick Fix Steps:**
+1. **Open MongoDB Atlas**: Go to https://cloud.mongodb.com
+2. **Find Network Access**: Click "Network Access" in the left menu
+3. **Add Your IP**: Click "Add IP Address" → "Add Current IP Address"
+4. **Wait 2-3 minutes** for changes to apply
+5. **Try again**: Restart your app with `npm run dev`
+
+**Still not working?**
+- ✅ Double-check your connection string in `.env.local`
+- ✅ Verify your MongoDB username/password are correct
+- ✅ Ensure your cluster is active (not paused)
+- ✅ Try adding `0.0.0.0/0` for all IPs (development only)
 
 ### **Login Still Fails:**
-1. Run the setup script again: `node scripts/setup-database.js`
-2. Check the terminal output for any errors
-3. Make sure you're using the exact credentials shown above
+1. **Run setup again**: `node scripts/setup-database.js`
+2. **Check terminal**: Look for success messages about user creation
+3. **Use exact credentials**: Copy-paste the emails and passwords shown
+4. **Clear browser**: Clear cookies/cache or try incognito mode
 
 ### **Courses Don't Appear:**
-The app has fallback data, so courses should always show. If they don't, restart the development server.
+The app has fallback data, so courses should always show. If they don't:
+1. **Restart server**: Stop (`Ctrl+C`) and run `npm run dev` again
+2. **Check console**: Look for any JavaScript errors in browser console
+3. **Database connection**: Ensure MongoDB connection is working
 
 ## 🎉 **Success Indicators:**
 
